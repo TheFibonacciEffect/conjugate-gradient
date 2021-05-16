@@ -8,16 +8,15 @@
 design an algorithm that performs the dominant part of operations on the GPU in single precision (`float`), but yields the result in double precision (`double`). The double precision part can be performed on the CPU. Tip: Use the complete `float`-CG as preconditioning matrix $`M^{-1}`$. Show analytically that this $`M^{-1}`$ is symmetric positive-definite, if $A$ is.
 
 3. Use the power methode/power iteration in together with CG, to determine the smallest and the largest eigenvalue ($`\lambda_{min}`$, $`\lambda_{max}`$) (see e.g. [3])
-
 ```math
-    \begin{align}
-    & q^{(0)}  \;\mathrm{arbitrary}  \nonumber \\
-    & \mathrm{for} \; k=1,2,...  \nonumber \\
-    & \quad z^{(k)}=A q^{(k-1)} \nonumber \\
-    & \quad q^{(k)}=z^{(k)}/||z^{(k)}|| \nonumber \\
-    & \quad \lambda^{(k)}={q^{(k)}}^{T} q^{(k)} \nonumber \\
-    & \mathrm{end} \nonumber
-    \end{align}
+    \begin{aligned}
+    & q^{(0)}  \;\mathrm{arbitrary} \\
+    & \mathrm{for} \; k=1,2,...  \\
+    & \quad z^{(k)}=A q^{(k-1)} \\
+    & \quad q^{(k)}=z^{(k)}/||z^{(k)}|| \\
+    & \quad \lambda^{(k)}={q^{(k)}}^{T} q^{(k)} \\
+    & \mathrm{end}
+    \end{aligned}
 ```
 with $`|\lambda_{max} - \lambda^{(k)}|\to 0`$.
 
