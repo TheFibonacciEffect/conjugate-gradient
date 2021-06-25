@@ -22,6 +22,17 @@ with $`|\lambda_{max} - \lambda^{(k)}|\to 0`$.
 
 4. Determine the necessary number of CG iterations for a given precision (reduction of residue norm) and compare it to the expected dependence of the convergence on the condition number $`\kappa=\lambda_{max}/\lambda_{min}`$.
 
+## Preconditioner
+
+- implement CG with a Jacobi-preconditoner and the mixed precision CG, described above
+- in first case: determine the improvement for convergence
+
+## Multigrid
+
+- implement the two grid correction scheme TG in [4] with Jacobi or Gauss-Seidel as smoother/relaxation method
+- compare the convergence and time to solution of TG with CG
+- use TG as preconditoner for CG
+
 [1] Jonathan Richard Shewchuk, "An Introduction to the Conjugate Gradient Method Without the Agonizing Pain" [http://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf](http://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf)
 
 [2] Generators for large sparse systems [http://people.physik.hu-berlin.de/~leder/cp3/laplace.pdf](http://people.physik.hu-berlin.de/~leder/cp3/laplace.pdf)
