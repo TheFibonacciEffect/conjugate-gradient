@@ -24,14 +24,14 @@ with $`|\lambda_{max} - \lambda^{(k)}|\to 0`$.
 
 ## Preconditioner
 
-- implement CG with a Jacobi-preconditoner and the mixed precision CG, described above
+- implement CG with a Jacobi-preconditioner and the mixed precision CG, described above
 - in first case: determine the improvement for convergence
 
 ## Multigrid
 
 - implement the two grid correction scheme TG in [4] with Jacobi or Gauss-Seidel as smoother/relaxation method
 - compare the convergence and time to solution of TG with CG
-- use TG as preconditoner for CG
+- use TG as preconditioner for CG
 
 [1] Jonathan Richard Shewchuk, "An Introduction to the Conjugate Gradient Method Without the Agonizing Pain" [http://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf](http://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf)
 
@@ -40,3 +40,5 @@ with $`|\lambda_{max} - \lambda^{(k)}|\to 0`$.
 [3] Gene H. Golub,  Charles F. Van Loan "Matrix Computations", Johns Hopkins University Press, 1989
 
 [4] Briggs, William & Henson, Van & McCormick, Steve. (2000). "A Multigrid Tutorial, 2nd Edition" [https://www.researchgate.net/publication/220690328_A_Multigrid_Tutorial_2nd_Edition](https://www.researchgate.net/publication/220690328_A_Multigrid_Tutorial_2nd_Edition)
+
+[5] Tatebe, Osamu. (1995). "The Multigrid Preconditioned Conjugate Gradient Method" [https://www.researchgate.net/publication/2818681_The_Multigrid_Preconditioned_Conjugate_Gradient_Method](https://www.researchgate.net/publication/2818681_The_Multigrid_Preconditioned_Conjugate_Gradient_Method)
