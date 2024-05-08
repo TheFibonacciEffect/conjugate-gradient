@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
+#include <assert.h>
 
 // float f(float x, float y) {
 //     return (x * x + y * y)/2;
@@ -50,7 +52,7 @@ double* second_derivative(double* f, int size, double dx) {
     return ddf;
 }
 
-int main() {
+int test() {
     int i, j;
     int n = 1000;
     double dx = 2.0 / (n - 1);
@@ -65,7 +67,14 @@ int main() {
     double* df = center_diff(u, n, dx);
     double* ddf = second_derivative(u, n, dx);
     for (i = 0; i < n; i++) {
-        printf("%f\n", ddf[i]);
+        // printf("%f\n", ddf[i]);
+        // printf("%f\n", fabs(ddf[i] - 1.0));
+        assert(fabs(ddf[i] - 1.0) < 1e-6);
     }
+    return 0;
+}
+
+int main() {
+    test();
     return 0;
 }
