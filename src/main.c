@@ -1,22 +1,45 @@
 #include <stdio.h>
 #include <math.h>
 
-float f(float x, float y) {
-    return (x * x + y * y)/2;
+// float f(float x, float y) {
+//     return (x * x + y * y)/2;
+// }
+
+double f(double x) //why does this conflict with the other f function? They have different signatures?
+{
+    return x*x/2;
+}
+
+double* center_diff(double* f, int size, double dx) {
+    double* df = malloc(size * sizeof(double));
+    for (int i = 0; i < size; i++) {
+        if (i == 0) {
+            df[i] = (f[i + 1] - f[i]) / dx;
+        } else if (i == size - 1) {
+            df[i] = (f[i] - f[i - 1]) / dx;
+        } else {
+            df[i] = (f[i + 1] - f[i - 1]) / (2 * dx);
+        }
+    }
+    return df;
 }
 
 int main() {
     int i, j;
-    int n = 10;
-    double step = 2.0 / (n - 1);
+    int n = 1000;
+    double dx = 2.0 / (n - 1);
     double x, y;
+    // double u[n][n];
+    double u[n];
 
     for (i = 0; i < n; i++) {
-        x = -1.0 + i * step;
-        for (j = 0; j < n; j++) {
-            y = -1.0 + j * step;
-            printf("(%lf, %lf) -> %lf\n", x, y, f(x, y));
-        }
+        x = -1 + i * dx;
+        u[i] = f(x);
+    }
+    center_diff(u, n, dx);
+
+    for (i = 0; i < n; i++) {
+        printf("%f\n", u[i]);
     }
     return 0;
 }
