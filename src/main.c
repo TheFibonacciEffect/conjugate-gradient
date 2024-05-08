@@ -24,6 +24,18 @@ double* center_diff(double* f, int size, double dx) {
     return df;
 }
 
+double* forward_diff(double* f, int size, double dx) {
+    double* df = malloc(size * sizeof(double));
+    for (int i = 0; i < size; i++) {
+        if (i == size - 1) {
+            df[i] = (f[i] - f[i - 1]) / dx;
+        } else {
+            df[i] = (f[i + 1] - f[i]) / dx;
+        }
+    }
+    return df;
+}
+
 int main() {
     int i, j;
     int n = 1000;
@@ -36,10 +48,10 @@ int main() {
         x = -1 + i * dx;
         u[i] = f(x);
     }
-    center_diff(u, n, dx);
-
+    df = center_diff(u, n, dx);
+    ddf = center_diff(df, n, dx);
     for (i = 0; i < n; i++) {
-        printf("%f\n", u[i]);
+        printf("%f\n", ddf[i]);
     }
     return 0;
 }
