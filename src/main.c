@@ -62,8 +62,8 @@ int main() {
         x = -1 + i * dx;
         u[i] = f(x);
     }
-    df = center_diff(u, n, dx);
-    ddf = second_derivative(u, n, dx);
+    double* df = center_diff(u, n, dx);
+    double* ddf = second_derivative(u, n, dx);
     for (i = 0; i < n; i++) {
         printf("%f\n", ddf[i]);
     }
