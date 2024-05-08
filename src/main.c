@@ -36,6 +36,20 @@ double* forward_diff(double* f, int size, double dx) {
     return df;
 }
 
+double* second_derivative(double* f, int size, double dx) {
+    double* ddf = malloc(size * sizeof(double));
+    for (int i = 0; i < size; i++) {
+        if (i == 0) {
+            ddf[i] = (f[i + 2] - 2 * f[i + 1] + f[i]) / (dx * dx);
+        } else if (i == size - 1) {
+            ddf[i] = (f[i] - 2 * f[i - 1] + f[i - 2]) / (dx * dx);
+        } else {
+            ddf[i] = (f[i + 1] - 2 * f[i] + f[i - 1]) / (dx * dx);
+        }
+    }
+    return ddf;
+}
+
 int main() {
     int i, j;
     int n = 1000;
@@ -49,7 +63,7 @@ int main() {
         u[i] = f(x);
     }
     df = center_diff(u, n, dx);
-    ddf = center_diff(df, n, dx);
+    ddf = second_derivative(u, n, dx);
     for (i = 0; i < n; i++) {
         printf("%f\n", ddf[i]);
     }
