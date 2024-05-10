@@ -12,7 +12,7 @@
 // int N = pow(L,d);
 
 float f2(float x, float y) {
-    return (x * x + y * y)/2;
+    return (x * x)/2;
 }
 
 double f(double x) //why does this conflict with the other f function? They have different signatures?
@@ -109,31 +109,56 @@ int get_index(int* cords) {
     return i;
 }
 
-int* index_to_cords(int i) {
-    int* cords = malloc(N*sizeof(int));
-    for (i=0; i<L; i++)
+int* index_to_cords(int index) {
+    int* cords = malloc(d*sizeof(int));
+    for ( int i=0; i<d; i++)
     {
-        cords[i] = i % L;
-        i /= L;
+        cords[i] = index % L;
+        index /= L;
     }
     return cords;
 }
 
+double* laplace(double* u, double dx) {
+    double* out = malloc(N*sizeof(double));
+    for (int nx=0; nx < L; nx++)
+    {
+        for (int ny=0; ny < L; ny++)
+        {
+            int* cords = malloc(2*sizeof(int));
+            cords[0] = nx;
+            cords[1] = ny;
+            int ind = get_index(cords);
+            // todo
+            // this might segfault
+            out[ind] = (u[ind+1] - 2* u[ind] + u[ind+1] - u[ind]) + (u[ind+L] - 2* u[ind] + u[ind-L]);
+            // u[get_index((nx,ny))] = (u[get_index((nx+1,ny))] - 2* u[get_index((nx,ny))] + u[get_index((nx+1,ny))] - u[get_index((nx,ny))]) + (u[get_index((nx,ny+1))] - 2* u[get_index((nx,ny))] + u[get_index((nx,ny+1))] - u[get_index((nx,ny))]);
+            // u[get_index((nx+1,ny))] - 2* u[get_index((nx,ny))] + u[get_index((nx+1,ny))] - u[get_index((nx,ny))];
+            free(cords);
+        }
+    }
+    return out;
+}
+
+
 int main() {
     test();
 
-    int i, j;
+    int i;
     double dx = 2.0 / (L - 1);
     double x, y;
     double* u = (double*) malloc(N*sizeof(float));
     for (i = 0; i < N; i++) {
         // x,y = index_to_cords(i);
-        x = index_to_cords(i)[0];
-        y = index_to_cords(i)[1];
-        x = -1 + i * dx;
-        y = -1 + j * dx;
+        int nx = index_to_cords(i)[0];
+        int ny = index_to_cords(i)[1];
+        x = -1 + nx * dx;
+        y = -1 + ny * dx;
         u[i] = f2(x, y);
-        printf("%f", u[i]);
+    }
+    laplace(u,dx);
+    for (i = 0; i < N; i++) {
+        printf("%f\n", u[i]);
     }
     return 0;
 }
