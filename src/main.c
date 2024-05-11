@@ -228,5 +228,7 @@ int main() {
         }
         printf("\n");
     }
+    free(u);
+    free(ddf);
     return 0;
 }
