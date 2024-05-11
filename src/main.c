@@ -146,7 +146,7 @@ double* laplace(double* u, double dx) {
                         //  + (u[ind + L] - 2 * u[ind] + u[ind - L]) / (dx * dx); //accessing the neighbouring elements with +L and -L does not work currently, I dont know why
                 // ddf[ind] = ((u[ind+1] - 2* u[ind] + u[ind+1]) + (u[ind+L] - 2* u[ind] + u[ind-L]))/(dx*dx);
             } 
-            printf("%d %d -> %d, %f\n", cords[0], cords[1], ind, ddf[ind]);
+            // printf("%d %d -> %d, %f\n", cords[0], cords[1], ind, ddf[ind]);
             free(cords);
         }
     }
@@ -169,10 +169,22 @@ double inner_product(double* x, double* y, int n) {
     return product;
 }
 
+void print_matrix(double* A, int n) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            printf("%f ", A[i * n + j]);
+        }
+        printf("\n");
+    }
+}
+
+
 double* conjugate_gradient(double* b, double* x) {
     // double* r = b - A*x;
     double* r = malloc(N*sizeof(double));
     double* Ax = laplace(x, 2.0 / (L - 1));
+    printf("Ax:\n");
+    print_matrix(Ax, L);
     for (int i = 0; i < N; i++) {
         r[i] = b[i] - Ax[i];
     }
@@ -211,18 +223,9 @@ int test_cg() {
         b[i] = 1;
     }
     x = conjugate_gradient(b, x);
-    for (i = 0; i < L; i++) {
-        for (int j = 0; j < L; j++) {
-            printf("%f ", x[get_index((int[]){i,j})]);
-        }
-        printf("\n");
-    }
+    print_matrix(x, L); // upper boundary is -inf
     double* Ax = laplace(x, 2.0 / (L - 1));
-    for (i = 0; i < L; i++) {
-        for (int j = 0; j < L; j++) {
-            printf("%f ", Ax[get_index((int[]){i,j})]);
-        }
-    }
+    print_matrix(Ax, L);
     free(x);
     free(b);
     free(Ax);
