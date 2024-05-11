@@ -169,7 +169,7 @@ double inner_product(double* x, double* y, int n) {
     return product;
 }
 
-double* conjugate_gradient(double* A, double* b, double* x) {
+double* conjugate_gradient(double* b, double* x) {
     // double* r = b - A*x;
     double* r = malloc(N*sizeof(double));
     double* Ax = laplace(x, 2.0 / (L - 1));
@@ -202,6 +202,33 @@ double* conjugate_gradient(double* A, double* b, double* x) {
     return x;
 }
 
+int test_cg() {
+    int i;
+    double* x = (double*) malloc(N*sizeof(double));
+    double* b = (double*) malloc(N*sizeof(double));
+    for (i = 0; i < N; i++) {
+        x[i] = 0;
+        b[i] = 1;
+    }
+    x = conjugate_gradient(b, x);
+    for (i = 0; i < L; i++) {
+        for (int j = 0; j < L; j++) {
+            printf("%f ", x[get_index((int[]){i,j})]);
+        }
+        printf("\n");
+    }
+    double* Ax = laplace(x, 2.0 / (L - 1));
+    for (i = 0; i < L; i++) {
+        for (int j = 0; j < L; j++) {
+            printf("%f ", Ax[get_index((int[]){i,j})]);
+        }
+    }
+    free(x);
+    free(b);
+    free(Ax);
+    return 0;
+}
+
 int main() {
     test_2nd_derivative();
 
@@ -230,5 +257,7 @@ int main() {
     }
     free(u);
     free(ddf);
+
+    test_cg();
     return 0;
 }
