@@ -133,13 +133,14 @@ double* laplace(double* u, double dx) {
             cords[0] = nx;
             cords[1] = ny;
             int ind = get_index(cords);
+            // TODO I am ignoring other boudnary conditions for now.
+            // TODO Derivatives along the other directions do nto work yet.
             if (ind == 0) {
                 ddf[ind] = (u[ind + 2] - 2 * u[ind + 1] + u[ind]) / (dx * dx);
                         //  + (u[ind + L] - 2 * u[ind] + u[ind + L]) / (dx * dx);
             } else if (ind == L - 1) {
                 ddf[ind] = (u[ind] - 2 * u[ind - 1] + u[ind - 2]) / (dx * dx);
                         //  + (u[ind + L] - 2 * u[ind] + u[ind - L]) / (dx * dx);
-            // TODO I am ignoring other boudnary conditions for now.
             } else {
                 ddf[ind] = (u[ind + 1] - 2 * u[ind] + u[ind - 1]) / (dx * dx);
                         //  + (u[ind + L] - 2 * u[ind] + u[ind - L]) / (dx * dx); //accessing the neighbouring elements with +L and -L does not work currently, I dont know why

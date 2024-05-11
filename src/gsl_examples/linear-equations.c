@@ -27,10 +27,9 @@ int main(void)
 
     printf("x = \n");
     gsl_vector_fprintf(stdout, x, "%g");
-    //   TODO multiply vector by matrix
     // int gsl_blas_dgemv(CBLAS_TRANSPOSE_t TransA, double alpha, const gsl_matrix *A, const gsl_vector *x, double beta, gsl_vector *y)
     gsl_blas_dgemv(CblasNoTrans, 1.0, &m.matrix, x, 0.0, x);
-    gsl_vector_fprintf(stdout, x, "%g"); //TODO this is not as expected, it just prints out 0.0 0.0 0.0 0.0
+    gsl_vector_fprintf(stdout, x, "%g"); //this is not as expected, it just prints out 0.0 0.0 0.0 0.0
     gsl_permutation_free(p);
     gsl_vector_free(x);
     return 0;
