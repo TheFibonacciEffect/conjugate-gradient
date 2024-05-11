@@ -12,7 +12,7 @@
 // int N = pow(L,d);
 
 float f2(float x, float y) {
-    return (x * x)/2;
+    return (x * x + y*y)/2;
 }
 
 double f(double x) //why does this conflict with the other f function? They have different signatures?
@@ -141,11 +141,13 @@ double* laplace(double* u, double dx) {
             // // u[get_index((nx,ny))] = (u[get_index((nx+1,ny))] - 2* u[get_index((nx,ny))] + u[get_index((nx+1,ny))] - u[get_index((nx,ny))]) + (u[get_index((nx,ny+1))] - 2* u[get_index((nx,ny))] + u[get_index((nx,ny+1))] - u[get_index((nx,ny))]);
             // // u[get_index((nx+1,ny))] - 2* u[get_index((nx,ny))] + u[get_index((nx+1,ny))] - u[get_index((nx,ny))];
             if (ind == 0) {
-            ddf[ind] = (u[ind + 2] - 2 * u[ind + 1] + u[ind]) / (dx * dx);
+                // ddf[ind] = (u[ind + 2] - 2 * u[ind + 1] + u[ind]) / (dx * dx);
             } else if (ind == L - 1) {
-                ddf[ind] = (u[ind] - 2 * u[ind - 1] + u[ind - 2]) / (dx * dx);
+                // ddf[ind] = (u[ind] - 2 * u[ind - 1] + u[ind - 2]) / (dx * dx);
             } else {
-                ddf[ind] = (u[ind + 1] - 2 * u[ind] + u[ind - 1]) / (dx * dx);
+                ddf[ind] = (u[ind + 1] - 2 * u[ind] + u[ind - 1]) / (dx * dx)
+                         + (u[ind + L] - 2 * u[ind] + u[ind - L]) / (dx * dx); //accessing the neighbouring elements with +L and -L does not work currently, I dont know why
+                // ddf[ind] = ((u[ind+1] - 2* u[ind] + u[ind+1]) + (u[ind+L] - 2* u[ind] + u[ind-L]))/(dx*dx);
             } 
             printf("%d %d -> %d, %f\n", cords[0], cords[1], ind, ddf[ind]);
             free(cords);
@@ -171,9 +173,9 @@ int main() {
         y = -1 + ny * dx;
         u[i] = f2(x, y);
     }
-    laplace(u,dx);
+    double* ddf = laplace(u,dx);
     for (i = 0; i < N; i++) {
-        printf("%f\n", u[i]);
+        printf("%f\n", ddf[i]);
     }
     return 0;
 }
