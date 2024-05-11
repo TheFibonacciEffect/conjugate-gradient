@@ -153,6 +153,54 @@ double* laplace(double* u, double dx) {
     return ddf;
 }
 
+double norm(double* x,int n) {
+    double norm = 0;
+    for (int i = 0; i < n; i++) {
+        norm += x[i] * x[i];
+    }
+    return sqrt(norm);
+}
+
+double inner_product(double* x, double* y, int n) {
+    double product = 0;
+    for (int i = 0; i < n; i++) {
+        product += x[i] * y[i];
+    }
+    return product;
+}
+
+double* conjugate_gradient(double* A, double* b, double* x) {
+    // double* r = b - A*x;
+    double* r = malloc(N*sizeof(double));
+    double* Ax = laplace(x, 2.0 / (L - 1));
+    for (int i = 0; i < N; i++) {
+        r[i] = b[i] - Ax[i];
+    }
+    double tol = 1e-6;
+    // double* p = r;
+    double* p = malloc(N*sizeof(double));
+    for (int i = 0; i < N; i++) {
+        p[i] = r[i];
+    }
+    while (norm(r, N) > tol)
+    {
+
+        double dx = 2.0 / (L - 1);
+        double alpha = inner_product(r, r, N) / inner_product(p, laplace(p, dx), N);
+        double* r_new = malloc(N*sizeof(double));
+        for (int i = 0; i < N; i++) {
+            x[i] = x[i] + alpha * p[i];
+            r_new[i] = r[i] - alpha * laplace(p, dx)[i];
+        }
+        double beta = inner_product(r_new, r_new, N) / inner_product(r, r, N);
+        for (int i = 0; i < N; i++) {
+            p[i] = r_new[i] + beta * p[i];
+            r[i] = r_new[i];
+        }
+    }
+
+    return x;
+}
 
 int main() {
     test_2nd_derivative();
