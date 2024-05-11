@@ -4,7 +4,7 @@
 #include <assert.h>
 
 
-#define L 100
+#define L 10
 #define d 1
 #define N pow(L,d)
 // int L = 100;
@@ -132,21 +132,17 @@ double* laplace(double* u, double dx) {
             int* cords = malloc(2*sizeof(int));
             cords[0] = nx;
             cords[1] = ny;
-            // this index is sus
             int ind = get_index(cords);
-            // todo
-            // // this might segfault
-            // // also it does not seem to calculate correctly
-            // out[ind] = ((u[ind+1] - 2* u[ind] + u[ind+1]) + (u[ind+L] - 2* u[ind] + u[ind-L]))/(dx*dx);
-            // // u[get_index((nx,ny))] = (u[get_index((nx+1,ny))] - 2* u[get_index((nx,ny))] + u[get_index((nx+1,ny))] - u[get_index((nx,ny))]) + (u[get_index((nx,ny+1))] - 2* u[get_index((nx,ny))] + u[get_index((nx,ny+1))] - u[get_index((nx,ny))]);
-            // // u[get_index((nx+1,ny))] - 2* u[get_index((nx,ny))] + u[get_index((nx+1,ny))] - u[get_index((nx,ny))];
             if (ind == 0) {
-                // ddf[ind] = (u[ind + 2] - 2 * u[ind + 1] + u[ind]) / (dx * dx);
+                ddf[ind] = (u[ind + 2] - 2 * u[ind + 1] + u[ind]) / (dx * dx);
+                        //  + (u[ind + L] - 2 * u[ind] + u[ind + L]) / (dx * dx);
             } else if (ind == L - 1) {
-                // ddf[ind] = (u[ind] - 2 * u[ind - 1] + u[ind - 2]) / (dx * dx);
+                ddf[ind] = (u[ind] - 2 * u[ind - 1] + u[ind - 2]) / (dx * dx);
+                        //  + (u[ind + L] - 2 * u[ind] + u[ind - L]) / (dx * dx);
+            // TODO I am ignoring other boudnary conditions for now.
             } else {
-                ddf[ind] = (u[ind + 1] - 2 * u[ind] + u[ind - 1]) / (dx * dx)
-                         + (u[ind + L] - 2 * u[ind] + u[ind - L]) / (dx * dx); //accessing the neighbouring elements with +L and -L does not work currently, I dont know why
+                ddf[ind] = (u[ind + 1] - 2 * u[ind] + u[ind - 1]) / (dx * dx);
+                        //  + (u[ind + L] - 2 * u[ind] + u[ind - L]) / (dx * dx); //accessing the neighbouring elements with +L and -L does not work currently, I dont know why
                 // ddf[ind] = ((u[ind+1] - 2* u[ind] + u[ind+1]) + (u[ind+L] - 2* u[ind] + u[ind-L]))/(dx*dx);
             } 
             printf("%d %d -> %d, %f\n", cords[0], cords[1], ind, ddf[ind]);
@@ -174,8 +170,14 @@ int main() {
         u[i] = f2(x, y);
     }
     double* ddf = laplace(u,dx);
-    for (i = 0; i < N; i++) {
-        printf("%f\n", ddf[i]);
+    // for (i = 0; i < N; i++) {
+    //     printf("%f\n", ddf[i]);
+    // }
+    for (i = 0; i < L; i++) {
+        for (int j = 0; j < L; j++) {
+            printf("%f ", ddf[get_index((int[]){i,j})]);
+        }
+        printf("\n");
     }
     return 0;
 }
