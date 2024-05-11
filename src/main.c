@@ -134,7 +134,6 @@ double* laplace(double* u, double dx) {
             cords[1] = ny;
             // this index is sus
             int ind = get_index(cords);
-            printf("%d %d -> %d\n", cords[0], cords[1], ind);
             // todo
             // // this might segfault
             // // also it does not seem to calculate correctly
@@ -148,6 +147,7 @@ double* laplace(double* u, double dx) {
             } else {
                 ddf[ind] = (u[ind + 1] - 2 * u[ind] + u[ind - 1]) / (dx * dx);
             } 
+            printf("%d %d -> %d, %f\n", cords[0], cords[1], ind, ddf[ind]);
             free(cords);
         }
     }
