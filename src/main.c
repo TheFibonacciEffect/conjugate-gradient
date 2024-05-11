@@ -5,7 +5,7 @@
 
 
 #define L 100
-#define d 2
+#define d 1
 #define N pow(L,d)
 // int L = 100;
 // int d = 2;
@@ -78,7 +78,7 @@ double* second_derivative(double* f, int size, double dx) {
 //     return laplace;
 // }
 
-int test() {
+int test_2nd_derivative() {
     int i, j;
     int n = 1000;
     double dx = 2.0 / (n - 1);
@@ -124,7 +124,7 @@ int* index_to_cords(int index) {
 }
 
 double* laplace(double* u, double dx) {
-    double* out = malloc(N*sizeof(double));
+    double* ddf = malloc(N*sizeof(double));
     for (int ny=0; ny < L; ny++)
     {
         for (int nx=0; nx < L; nx++)
@@ -136,20 +136,27 @@ double* laplace(double* u, double dx) {
             int ind = get_index(cords);
             printf("%d %d -> %d\n", cords[0], cords[1], ind);
             // todo
-            // this might segfault
-            // also it does not seem to calculate correctly
-            out[ind] = ((u[ind+1] - 2* u[ind] + u[ind+1]) + (u[ind+L] - 2* u[ind] + u[ind-L]))/(dx*dx);
-            // u[get_index((nx,ny))] = (u[get_index((nx+1,ny))] - 2* u[get_index((nx,ny))] + u[get_index((nx+1,ny))] - u[get_index((nx,ny))]) + (u[get_index((nx,ny+1))] - 2* u[get_index((nx,ny))] + u[get_index((nx,ny+1))] - u[get_index((nx,ny))]);
-            // u[get_index((nx+1,ny))] - 2* u[get_index((nx,ny))] + u[get_index((nx+1,ny))] - u[get_index((nx,ny))];
+            // // this might segfault
+            // // also it does not seem to calculate correctly
+            // out[ind] = ((u[ind+1] - 2* u[ind] + u[ind+1]) + (u[ind+L] - 2* u[ind] + u[ind-L]))/(dx*dx);
+            // // u[get_index((nx,ny))] = (u[get_index((nx+1,ny))] - 2* u[get_index((nx,ny))] + u[get_index((nx+1,ny))] - u[get_index((nx,ny))]) + (u[get_index((nx,ny+1))] - 2* u[get_index((nx,ny))] + u[get_index((nx,ny+1))] - u[get_index((nx,ny))]);
+            // // u[get_index((nx+1,ny))] - 2* u[get_index((nx,ny))] + u[get_index((nx+1,ny))] - u[get_index((nx,ny))];
+            if (ind == 0) {
+            ddf[ind] = (u[ind + 2] - 2 * u[ind + 1] + u[ind]) / (dx * dx);
+            } else if (ind == L - 1) {
+                ddf[ind] = (u[ind] - 2 * u[ind - 1] + u[ind - 2]) / (dx * dx);
+            } else {
+                ddf[ind] = (u[ind + 1] - 2 * u[ind] + u[ind - 1]) / (dx * dx);
+            } 
             free(cords);
         }
     }
-    return out;
+    return ddf;
 }
 
 
 int main() {
-    test();
+    test_2nd_derivative();
 
     int i;
     double dx = 2.0 / (L - 1);
