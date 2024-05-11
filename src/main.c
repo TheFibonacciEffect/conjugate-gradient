@@ -100,13 +100,17 @@ int test() {
     return 0;
 }
 
-
-int get_index(int* cords) {
-    int i;
-    for (i=0; i<=d; i++) {
-        i += L*cords[i];
+// get_index((1,0)) -> 20
+// get_index((0,1)) -> 20
+// this is not good
+// todo
+int get_index(int cords[d]) {
+    int ind = 0;
+    for (int i=0; i<d; i++) {
+        // todo unedfined reference to pow
+        ind += pow(L,i)*cords[i];
     }
-    return i;
+    return ind;
 }
 
 int* index_to_cords(int index) {
@@ -121,17 +125,20 @@ int* index_to_cords(int index) {
 
 double* laplace(double* u, double dx) {
     double* out = malloc(N*sizeof(double));
-    for (int nx=0; nx < L; nx++)
+    for (int ny=0; ny < L; ny++)
     {
-        for (int ny=0; ny < L; ny++)
+        for (int nx=0; nx < L; nx++)
         {
             int* cords = malloc(2*sizeof(int));
             cords[0] = nx;
             cords[1] = ny;
+            // this index is sus
             int ind = get_index(cords);
+            printf("%d %d -> %d\n", cords[0], cords[1], ind);
             // todo
             // this might segfault
-            out[ind] = (u[ind+1] - 2* u[ind] + u[ind+1] - u[ind]) + (u[ind+L] - 2* u[ind] + u[ind-L]);
+            // also it does not seem to calculate correctly
+            out[ind] = ((u[ind+1] - 2* u[ind] + u[ind+1]) + (u[ind+L] - 2* u[ind] + u[ind-L]))/(dx*dx);
             // u[get_index((nx,ny))] = (u[get_index((nx+1,ny))] - 2* u[get_index((nx,ny))] + u[get_index((nx+1,ny))] - u[get_index((nx,ny))]) + (u[get_index((nx,ny+1))] - 2* u[get_index((nx,ny))] + u[get_index((nx,ny+1))] - u[get_index((nx,ny))]);
             // u[get_index((nx+1,ny))] - 2* u[get_index((nx,ny))] + u[get_index((nx+1,ny))] - u[get_index((nx,ny))];
             free(cords);
@@ -148,6 +155,7 @@ int main() {
     double dx = 2.0 / (L - 1);
     double x, y;
     double* u = (double*) malloc(N*sizeof(float));
+
     for (i = 0; i < N; i++) {
         // x,y = index_to_cords(i);
         int nx = index_to_cords(i)[0];
