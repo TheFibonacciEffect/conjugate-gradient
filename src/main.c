@@ -142,8 +142,7 @@ int* index_to_cords(int index) {
     return cords;
 }
 
-double* minus_laplace(double* u, double dx) {
-    double* ddf = malloc(N*sizeof(double));
+double* minus_laplace(double* ddf, double* u, double dx) {
     for (int ny=0; ny < L; ny++)
     {
         for (int nx=0; nx < L; nx++)
@@ -198,11 +197,17 @@ void print_matrix(double* A, int n) {
     }
 }
 
+double* allocate_field()
+{
+    double* r = malloc((N+1)*sizeof(double));
+    r[N] = 0;
+    return r;
+}
 
 double* conjugate_gradient(double* b, double* x) {
-    // double* r = b - A*x;
-    double* r = malloc(N*sizeof(double));
-    double* Ax = minus_laplace(x, 2.0 / (L - 1));
+    double* r = allocate_field();
+    double* Ax = allocate_field();
+    minus_laplace(Ax, x, 2.0 / (L - 1));
     printf("Ax:\n");
     print_matrix(Ax, L);
     for (int i = 0; i < N; i++) {
@@ -210,19 +215,21 @@ double* conjugate_gradient(double* b, double* x) {
     }
     double tol = 1e-6;
     // double* p = r;
-    double* p = malloc(N*sizeof(double));
+    double* p = allocate_field();
     for (int i = 0; i < N; i++) {
         p[i] = r[i];
     }
+    double* tmp = allocate_field();
+    double* r_new = allocate_field();
+    float dx = 2.0/(L-1);
     while (norm(r, N) > tol)
     {
-
+        double* Ap =  minus_laplace(tmp,p, dx);
         double dx = 2.0 / (L - 1);
-        double alpha = inner_product(r, r, N) / inner_product(p, minus_laplace(p, dx), N);
-        double* r_new = malloc(N*sizeof(double));
+        double alpha = inner_product(r, r, N) / inner_product(p, Ap, N);
         for (int i = 0; i < N; i++) {
             x[i] = x[i] + alpha * p[i];
-            r_new[i] = r[i] - alpha * minus_laplace(p, dx)[i];
+            r_new[i] = r[i] - alpha * Ap[i];
         }
         double beta = inner_product(r_new, r_new, N) / inner_product(r, r, N);
         for (int i = 0; i < N; i++) {
@@ -230,27 +237,32 @@ double* conjugate_gradient(double* b, double* x) {
             r[i] = r_new[i];
         }
     }
-
+    free(tmp);
+    free(r);
+    free(r_new);
+    free(Ax);
+    free(p);
     return x;
 }
 
-int test_cg() {
-    int i;
-    double* x = (double*) malloc(N*sizeof(double));
-    double* b = (double*) malloc(N*sizeof(double));
-    for (i = 0; i < N; i++) {
-        x[i] = 0;
-        b[i] = 1;
-    }
-    x = conjugate_gradient(b, x);
-    print_matrix(x, L); // upper boundary is -inf
-    double* Ax = minus_laplace(x, 2.0 / (L - 1));
-    print_matrix(Ax, L);
-    free(x);
-    free(b);
-    free(Ax);
-    return 0;
-}
+// TODO
+// int test_cg() {
+//     int i;
+//     double* x = (double*) malloc(N*sizeof(double));
+//     double* b = (double*) malloc(N*sizeof(double));
+//     for (i = 0; i < N; i++) {
+//         x[i] = 0;
+//         b[i] = 1;
+//     }
+//     x = conjugate_gradient(b, x);
+//     print_matrix(x, L); // upper boundary is -inf
+//     double* Ax = minus_laplace(Ax, x, 2.0 / (L - 1));
+//     print_matrix(Ax, L);
+//     free(x);
+//     free(b);
+//     free(Ax);
+//     return 0;
+// }
 
 int main() {
     test_2nd_derivative();
@@ -268,7 +280,8 @@ int main() {
         y = -1 + ny * dx;
         u[i] = f2(x, y);
     }
-    double* ddf = minus_laplace(u,dx);
+    double* ddf = allocate_field();
+    ddf = minus_laplace(ddf, u,dx);
     // for (i = 0; i < N; i++) {
     //     printf("%f\n", ddf[i]);
     // }
