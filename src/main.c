@@ -2,11 +2,11 @@
 #include <math.h>
 #include <stdlib.h>
 #include <assert.h>
-
+#include <string.h>
 
 #define L 10
-#define d 1
-#define N pow(L,d)
+#define d 2
+#define N (int)pow(L,d)
 // int L = 100;
 // int d = 2;
 // int N = pow(L,d);
@@ -61,9 +61,9 @@ double* second_derivative(double* f, int size, double dx) {
 }
 
 // double** laplace_2d(int size, double dx, double f[size][size]) {
-//     // double* (*laplace)[size] = malloc(sizeof(double[size][size]));
-//     // double* laplace = malloc(size*size*sizeof(double));
-//     double laplace[size][size];
+//     // double* (*minus_laplace)[size] = malloc(sizeof(double[size][size]));
+//     // double* minus_laplace = malloc(size*size*sizeof(double));
+//     double minus_laplace[size][size];
 //     for (int i = 0; i < size; i++) {
 //         for (int j = 0; i < size; j++) {
 //             if (i == 0) {
@@ -71,11 +71,11 @@ double* second_derivative(double* f, int size, double dx) {
 //             } else if (i == size - 1) {
 //                 // todo
 //             } else {
-//                 laplace[i][j] = (f[i + 1][j] - 2 * f[i][j] + f[i - 1][j]) / (dx * dx) + (f[i][j + 1] - 2 * f[i][j] + f[i][j - 1]) / (dx * dx);
+//                 minus_laplace[i][j] = (f[i + 1][j] - 2 * f[i][j] + f[i - 1][j]) / (dx * dx) + (f[i][j + 1] - 2 * f[i][j] + f[i][j - 1]) / (dx * dx);
 //             }
 //         }
 //     }
-//     return laplace;
+//     return minus_laplace;
 // }
 
 int test_2nd_derivative() {
@@ -105,12 +105,31 @@ int test_2nd_derivative() {
 // this is not good
 // todo
 int get_index(int cords[d]) {
+    for (int c = 0; c < d; c++)
+    {
+        int cord = cords[c];
+        assert(cord < L+1 && cord > -2);
+        if (cord==-1 || cord==L)
+        {
+            return N;
+        }
+    }
+
     int ind = 0;
     for (int i=0; i<d; i++) {
-        // todo unedfined reference to pow
         ind += pow(L,i)*cords[i];
     }
     return ind;
+}
+
+
+
+int neighbour_index(int cords[d], int direction, int amount)
+{
+    int copy_cords[d];
+    memcpy(copy_cords , cords, d*sizeof(int));
+    copy_cords[direction] += amount;
+    return get_index(copy_cords);
 }
 
 int* index_to_cords(int index) {
@@ -123,30 +142,31 @@ int* index_to_cords(int index) {
     return cords;
 }
 
-double* laplace(double* u, double dx) {
+double* minus_laplace(double* u, double dx) {
     double* ddf = malloc(N*sizeof(double));
     for (int ny=0; ny < L; ny++)
     {
         for (int nx=0; nx < L; nx++)
         {
-            int* cords = malloc(2*sizeof(int));
+            int* cords = malloc(d*sizeof(int));
             cords[0] = nx;
             cords[1] = ny;
             int ind = get_index(cords);
             // TODO I am ignoring other boudnary conditions for now.
             // TODO Derivatives along the other directions do nto work yet.
-            if (ind == 0) {
-                ddf[ind] = (u[ind + 2] - 2 * u[ind + 1] + u[ind]) / (dx * dx);
-                        //  + (u[ind + L] - 2 * u[ind] + u[ind + L]) / (dx * dx);
-            } else if (ind == L - 1) {
-                ddf[ind] = (u[ind] - 2 * u[ind - 1] + u[ind - 2]) / (dx * dx);
-                        //  + (u[ind + L] - 2 * u[ind] + u[ind - L]) / (dx * dx);
-            } else {
-                ddf[ind] = (u[ind + 1] - 2 * u[ind] + u[ind - 1]) / (dx * dx);
-                        //  + (u[ind + L] - 2 * u[ind] + u[ind - L]) / (dx * dx); //accessing the neighbouring elements with +L and -L does not work currently, I dont know why
-                // ddf[ind] = ((u[ind+1] - 2* u[ind] + u[ind+1]) + (u[ind+L] - 2* u[ind] + u[ind-L]))/(dx*dx);
+            float laplace_value = 0;
+            for (int i=0; i<d; i++)
+            {
+                laplace_value += -u[neighbour_index(cords,i,1)] + 2* u[neighbour_index(cords, i, 0)] - u[neighbour_index(cords, i, -1)];
+
             } 
             // printf("%d %d -> %d, %f\n", cords[0], cords[1], ind, ddf[ind]);
+            // ddf[ind] = laplace_value/pow(dx,d);
+            // printf("%f", laplace_value*1000);
+            // printf("%f", laplace_value);
+            // printf("%f", laplace_value/pow(dx,d));
+            // printf("%i", ind);
+            ddf[ind] = laplace_value/pow(dx,d);
             free(cords);
         }
     }
@@ -182,7 +202,7 @@ void print_matrix(double* A, int n) {
 double* conjugate_gradient(double* b, double* x) {
     // double* r = b - A*x;
     double* r = malloc(N*sizeof(double));
-    double* Ax = laplace(x, 2.0 / (L - 1));
+    double* Ax = minus_laplace(x, 2.0 / (L - 1));
     printf("Ax:\n");
     print_matrix(Ax, L);
     for (int i = 0; i < N; i++) {
@@ -198,11 +218,11 @@ double* conjugate_gradient(double* b, double* x) {
     {
 
         double dx = 2.0 / (L - 1);
-        double alpha = inner_product(r, r, N) / inner_product(p, laplace(p, dx), N);
+        double alpha = inner_product(r, r, N) / inner_product(p, minus_laplace(p, dx), N);
         double* r_new = malloc(N*sizeof(double));
         for (int i = 0; i < N; i++) {
             x[i] = x[i] + alpha * p[i];
-            r_new[i] = r[i] - alpha * laplace(p, dx)[i];
+            r_new[i] = r[i] - alpha * minus_laplace(p, dx)[i];
         }
         double beta = inner_product(r_new, r_new, N) / inner_product(r, r, N);
         for (int i = 0; i < N; i++) {
@@ -224,7 +244,7 @@ int test_cg() {
     }
     x = conjugate_gradient(b, x);
     print_matrix(x, L); // upper boundary is -inf
-    double* Ax = laplace(x, 2.0 / (L - 1));
+    double* Ax = minus_laplace(x, 2.0 / (L - 1));
     print_matrix(Ax, L);
     free(x);
     free(b);
@@ -238,8 +258,8 @@ int main() {
     int i;
     double dx = 2.0 / (L - 1);
     double x, y;
-    double* u = (double*) malloc(N*sizeof(float));
-
+    double* u = (double*) malloc((N+1)*sizeof(float));
+    u[N] = 0;
     for (i = 0; i < N; i++) {
         // x,y = index_to_cords(i);
         int nx = index_to_cords(i)[0];
@@ -248,7 +268,7 @@ int main() {
         y = -1 + ny * dx;
         u[i] = f2(x, y);
     }
-    double* ddf = laplace(u,dx);
+    double* ddf = minus_laplace(u,dx);
     // for (i = 0; i < N; i++) {
     //     printf("%f\n", ddf[i]);
     // }
@@ -261,6 +281,6 @@ int main() {
     free(u);
     free(ddf);
 
-    test_cg();
+    // test_cg();
     return 0;
 }
