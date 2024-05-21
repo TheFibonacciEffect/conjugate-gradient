@@ -244,9 +244,10 @@ double* conjugate_gradient(double* b, double* x) {
 
 bool every(double* x, double y, int n)
 {
+    double tol = 1e-3;
     for (int i = 0; i < n; i++)
     {
-        if (x[i] - y > 1e-6 || x[i] - y < -1e-6) // floating point comparison
+        if (x[i] - y > tol || x[i] - y < -tol) // floating point comparison
         {
             return false;
         }
@@ -282,7 +283,7 @@ int main() {
     int i;
     double dx = 2.0 / (L - 1);
     double x, y;
-    double* u = (double*) malloc((N+1)*sizeof(float));
+    double* u = allocate_field();
     u[N] = 0;
     for (i = 0; i < N; i++) {
         // x,y = index_to_cords(i);
