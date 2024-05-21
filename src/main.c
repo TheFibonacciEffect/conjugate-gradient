@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define L 10
 #define d 2
@@ -199,7 +200,7 @@ void print_matrix(double* A, int n) {
 
 double* allocate_field()
 {
-    double* r = malloc((N+1)*sizeof(double));
+    double* r = calloc(N+1,(N+1)*sizeof(double));
     r[N] = 0;
     return r;
 }
@@ -245,24 +246,39 @@ double* conjugate_gradient(double* b, double* x) {
     return x;
 }
 
+bool every(double* x, double y, int n)
+{
+    for (int i = 0; i < n; i++)
+    {
+        if (x[i] - y > 1e-6 || x[i] - y < -1e-6) // floating point comparison
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 // TODO
-// int test_cg() {
-//     int i;
-//     double* x = (double*) malloc(N*sizeof(double));
-//     double* b = (double*) malloc(N*sizeof(double));
-//     for (i = 0; i < N; i++) {
-//         x[i] = 0;
-//         b[i] = 1;
-//     }
-//     x = conjugate_gradient(b, x);
-//     print_matrix(x, L); // upper boundary is -inf
-//     double* Ax = minus_laplace(Ax, x, 2.0 / (L - 1));
-//     print_matrix(Ax, L);
-//     free(x);
-//     free(b);
-//     free(Ax);
-//     return 0;
-// }
+int test_cg() {
+    int i;
+    double* x = allocate_field();
+    double* b = allocate_field();
+    for (i = 0; i < N; i++) {
+        x[i] = 0;
+        b[i] = 1;
+    }
+    x = conjugate_gradient(b, x);
+    print_matrix(x, L);
+    double* Ax = allocate_field();
+    minus_laplace(Ax, x, 2.0 / (L - 1));
+    printf("--------------Test result: Ax should be 1 -----------------\n");
+    print_matrix(Ax, L);
+    assert(every(Ax, 1., N));
+    free(x);
+    free(b);
+    free(Ax);
+    return 0;
+}
 
 int main() {
     test_2nd_derivative();
@@ -294,6 +310,6 @@ int main() {
     free(u);
     free(ddf);
 
-    // test_cg();
+    test_cg();
     return 0;
 }
