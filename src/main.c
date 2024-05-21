@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define L 10
+#define L 100
 #define d 2
 #define N (int)pow(L,d)
 // int L = 100;
@@ -101,10 +101,6 @@ int test_2nd_derivative() {
     return 0;
 }
 
-// get_index((1,0)) -> 20
-// get_index((0,1)) -> 20
-// this is not good
-// todo
 int get_index(int cords[d]) {
     for (int c = 0; c < d; c++)
     {
