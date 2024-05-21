@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 #define L 100
-#define d 2
+#define d 3
 #define N (int)pow(L,d)
 // int L = 100;
 // int d = 2;
@@ -120,7 +120,6 @@ int get_index(int cords[d]) {
 }
 
 
-
 int neighbour_index(int cords[d], int direction, int amount)
 {
     int copy_cords[d];
@@ -197,6 +196,11 @@ void print_matrix(double* A, int n) {
 double* allocate_field()
 {
     double* r = calloc(N+1,(N+1)*sizeof(double));
+    if (r == NULL)
+    {
+        printf("Memory allocation failed");
+        exit(1);
+    }
     r[N] = 0;
     return r;
 }
