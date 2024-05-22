@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 #define L 100
-#define d 3
+#define d 2
 #define N (int)pow(L,d)
 // int L = 100;
 // int d = 2;
@@ -214,7 +214,7 @@ double* conjugate_gradient(double* b, double* x) {
     for (int i = 0; i < N; i++) {
         r[i] = b[i] - Ax[i];
     }
-    double tol = 1e-6;
+    double tol = 1e-3;
     // double* p = r;
     double* p = allocate_field();
     for (int i = 0; i < N; i++) {
@@ -246,12 +246,25 @@ double* conjugate_gradient(double* b, double* x) {
     return x;
 }
 
-bool every(double* x, double y, int n)
+bool every_f(double* x, double y, int n)
 {
     double tol = 1e-3;
     for (int i = 0; i < n; i++)
     {
         if (x[i] - y > tol || x[i] - y < -tol) // floating point comparison
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool every_a(double* x, double* y, int n)
+{
+    double tol = 1e-3;
+    for (int i = 0; i < n; i++)
+    {
+        if (x[i] - y[i] > tol || x[i] - y[i] < -tol) // floating point comparison
         {
             return false;
         }
@@ -274,7 +287,7 @@ int test_cg() {
     minus_laplace(Ax, x, 2.0 / (L - 1));
     printf("--------------Test result: Ax should be 1 -----------------\n");
     print_matrix(Ax, L);
-    assert(every(Ax, 1., N));
+    assert(every_a(Ax, b, N));
     free(x);
     free(b);
     free(Ax);
@@ -299,15 +312,6 @@ int main() {
     }
     double* ddf = allocate_field();
     ddf = minus_laplace(ddf, u,dx);
-    // for (i = 0; i < N; i++) {
-    //     printf("%f\n", ddf[i]);
-    // }
-    for (i = 0; i < L; i++) {
-        for (int j = 0; j < L; j++) {
-            printf("%f ", ddf[get_index((int[]){i,j})]);
-        }
-        printf("\n");
-    }
     free(u);
     free(ddf);
 
