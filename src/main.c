@@ -5,18 +5,15 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define L 100
-#define d 2
-#define N (int)pow(L,d)
-// int L = 100;
-// int d = 2;
-// int N = pow(L,d);
+#define L 100  // Lattice size
+#define d 10  // Dimension
+#define N (int)pow(L,d) // Number of lattice points
 
 float f2(float x, float y) {
     return (x * x + y*y)/2;
 }
 
-double f(double x) //why does this conflict with the other f function? They have different signatures?
+double f(double x)
 {
     return x*x/2;
 }
@@ -84,7 +81,6 @@ int test_2nd_derivative() {
     int n = 1000;
     double dx = 2.0 / (n - 1);
     double x, y;
-    // double u[n][n];
     double u[n];
 
     for (i = 0; i < n; i++) {
@@ -94,8 +90,6 @@ int test_2nd_derivative() {
     double* df = center_diff(u, n, dx);
     double* ddf = second_derivative(u, n, dx);
     for (i = 0; i < n; i++) {
-        // printf("%f\n", ddf[i]);
-        // printf("%f\n", fabs(ddf[i] - 1.0));
         assert(fabs(ddf[i] - 1.0) < 1e-6);
     }
     return 0;
@@ -141,20 +135,12 @@ double* minus_laplace(double* ddf, double* u, double dx) {
     for (int ind = 0; ind < N; ind++) {
             int cords[d];
             index_to_cords(cords,ind);
-            // TODO I am ignoring other boudnary conditions for now.
-            // TODO Derivatives along the other directions do nto work yet.
             float laplace_value = 0;
             for (int i=0; i<d; i++)
             {
                 laplace_value += -u[neighbour_index(cords,i,1)] + 2* u[neighbour_index(cords, i, 0)] - u[neighbour_index(cords, i, -1)];
 
             } 
-            // printf("%d %d -> %d, %f\n", cords[0], cords[1], ind, ddf[ind]);
-            // ddf[ind] = laplace_value/pow(dx,d);
-            // printf("%f", laplace_value*1000);
-            // printf("%f", laplace_value);
-            // printf("%f", laplace_value/pow(dx,d));
-            // printf("%i", ind);
             ddf[ind] = laplace_value/pow(dx,d);
             
     }
@@ -208,7 +194,7 @@ double* conjugate_gradient(double* b, double* x) {
         r[i] = b[i] - Ax[i];
     }
     double tol = 1e-3;
-    // double* p = r;
+    // p = r;
     double* p = allocate_field();
     for (int i = 0; i < N; i++) {
         p[i] = r[i];
