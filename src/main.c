@@ -128,8 +128,7 @@ int neighbour_index(int cords[d], int direction, int amount)
     return get_index(copy_cords);
 }
 
-int* index_to_cords(int index) {
-    int* cords = malloc(d*sizeof(int));
+int* index_to_cords(int*cords, int index) {
     for ( int i=0; i<d; i++)
     {
         cords[i] = index % L;
@@ -139,14 +138,9 @@ int* index_to_cords(int index) {
 }
 
 double* minus_laplace(double* ddf, double* u, double dx) {
-    for (int ny=0; ny < L; ny++)
-    {
-        for (int nx=0; nx < L; nx++)
-        {
-            int* cords = malloc(d*sizeof(int));
-            cords[0] = nx;
-            cords[1] = ny;
-            int ind = get_index(cords);
+    for (int ind = 0; ind < N; ind++) {
+            int cords[d];
+            index_to_cords(cords,ind);
             // TODO I am ignoring other boudnary conditions for now.
             // TODO Derivatives along the other directions do nto work yet.
             float laplace_value = 0;
@@ -162,8 +156,7 @@ double* minus_laplace(double* ddf, double* u, double dx) {
             // printf("%f", laplace_value/pow(dx,d));
             // printf("%i", ind);
             ddf[ind] = laplace_value/pow(dx,d);
-            free(cords);
-        }
+            
     }
     return ddf;
 }
@@ -195,7 +188,7 @@ void print_matrix(double* A, int n) {
 
 double* allocate_field()
 {
-    double* r = calloc(N+1,(N+1)*sizeof(double));
+    double* r = calloc(N+1,sizeof(double));
     if (r == NULL)
     {
         printf("Memory allocation failed");
@@ -303,9 +296,10 @@ int main() {
     double* u = allocate_field();
     u[N] = 0;
     for (i = 0; i < N; i++) {
-        // x,y = index_to_cords(i);
-        int nx = index_to_cords(i)[0];
-        int ny = index_to_cords(i)[1];
+        int cords[2];
+        index_to_cords(cords,i);
+        int nx = cords[0];
+        int ny = cords[1];
         x = -1 + nx * dx;
         y = -1 + ny * dx;
         u[i] = f2(x, y);
