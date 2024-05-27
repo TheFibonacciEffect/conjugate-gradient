@@ -5,97 +5,16 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define L 100  // Lattice size
-#define d 10  // Dimension
-#define N (int)pow(L,d) // Number of lattice points
+// #define L 5  // Lattice size
+// #define d 3  // Dimension
+// #define N (int)pow(L,d) // Number of lattice points
 
 float f2(float x, float y) {
     return (x * x + y*y)/2;
 }
 
-double f(double x)
-{
-    return x*x/2;
-}
 
-double* center_diff(double* f, int size, double dx) {
-    double* df = malloc(size * sizeof(double));
-    for (int i = 0; i < size; i++) {
-        if (i == 0) {
-            df[i] = (f[i + 1] - f[i]) / dx;
-        } else if (i == size - 1) {
-            df[i] = (f[i] - f[i - 1]) / dx;
-        } else {
-            df[i] = (f[i + 1] - f[i - 1]) / (2 * dx);
-        }
-    }
-    return df;
-}
-
-double* forward_diff(double* f, int size, double dx) {
-    double* df = malloc(size * sizeof(double));
-    for (int i = 0; i < size; i++) {
-        if (i == size - 1) {
-            df[i] = (f[i] - f[i - 1]) / dx;
-        } else {
-            df[i] = (f[i + 1] - f[i]) / dx;
-        }
-    }
-    return df;
-}
-
-double* second_derivative(double* f, int size, double dx) {
-    double* ddf = malloc(size * sizeof(double));
-    for (int i = 0; i < size; i++) {
-        if (i == 0) {
-            ddf[i] = (f[i + 2] - 2 * f[i + 1] + f[i]) / (dx * dx);
-        } else if (i == size - 1) {
-            ddf[i] = (f[i] - 2 * f[i - 1] + f[i - 2]) / (dx * dx);
-        } else {
-            ddf[i] = (f[i + 1] - 2 * f[i] + f[i - 1]) / (dx * dx);
-        }
-    }
-    return ddf;
-}
-
-// double** laplace_2d(int size, double dx, double f[size][size]) {
-//     // double* (*minus_laplace)[size] = malloc(sizeof(double[size][size]));
-//     // double* minus_laplace = malloc(size*size*sizeof(double));
-//     double minus_laplace[size][size];
-//     for (int i = 0; i < size; i++) {
-//         for (int j = 0; i < size; j++) {
-//             if (i == 0) {
-//                 // todo
-//             } else if (i == size - 1) {
-//                 // todo
-//             } else {
-//                 minus_laplace[i][j] = (f[i + 1][j] - 2 * f[i][j] + f[i - 1][j]) / (dx * dx) + (f[i][j + 1] - 2 * f[i][j] + f[i][j - 1]) / (dx * dx);
-//             }
-//         }
-//     }
-//     return minus_laplace;
-// }
-
-int test_2nd_derivative() {
-    int i, j;
-    int n = 1000;
-    double dx = 2.0 / (n - 1);
-    double x, y;
-    double u[n];
-
-    for (i = 0; i < n; i++) {
-        x = -1 + i * dx;
-        u[i] = f(x);
-    }
-    double* df = center_diff(u, n, dx);
-    double* ddf = second_derivative(u, n, dx);
-    for (i = 0; i < n; i++) {
-        assert(fabs(ddf[i] - 1.0) < 1e-6);
-    }
-    return 0;
-}
-
-int get_index(int cords[d]) {
+int get_index(int* cords, int L, int d, int N) {
     for (int c = 0; c < d; c++)
     {
         int cord = cords[c];
@@ -114,15 +33,15 @@ int get_index(int cords[d]) {
 }
 
 
-int neighbour_index(int cords[d], int direction, int amount)
+int neighbour_index(int* cords, int direction, int amount, int L, int d, int N)
 {
     int copy_cords[d];
     memcpy(copy_cords , cords, d*sizeof(int));
     copy_cords[direction] += amount;
-    return get_index(copy_cords);
+    return get_index(copy_cords, L,d,N);
 }
 
-int* index_to_cords(int*cords, int index) {
+int* index_to_cords(int*cords, int index, int L, int d) {
     for ( int i=0; i<d; i++)
     {
         cords[i] = index % L;
@@ -131,14 +50,14 @@ int* index_to_cords(int*cords, int index) {
     return cords;
 }
 
-double* minus_laplace(double* ddf, double* u, double dx) {
+double* minus_laplace(double* ddf, double* u, double dx, int d, int L, int N) {
     for (int ind = 0; ind < N; ind++) {
             int cords[d];
-            index_to_cords(cords,ind);
+            index_to_cords(cords,ind, L, d);
             float laplace_value = 0;
             for (int i=0; i<d; i++)
             {
-                laplace_value += -u[neighbour_index(cords,i,1)] + 2* u[neighbour_index(cords, i, 0)] - u[neighbour_index(cords, i, -1)];
+                laplace_value += -u[neighbour_index(cords,i,1, L,d,N)] + 2* u[neighbour_index(cords, i, 0, L,d,N)] - u[neighbour_index(cords, i, -1, L,d,N)];
 
             } 
             ddf[ind] = laplace_value/pow(dx,d);
@@ -172,7 +91,7 @@ void print_matrix(double* A, int n) {
     }
 }
 
-double* allocate_field()
+double* allocate_field(int N)
 {
     double* r = calloc(N+1,sizeof(double));
     if (r == NULL)
@@ -184,10 +103,11 @@ double* allocate_field()
     return r;
 }
 
-double* conjugate_gradient(double* b, double* x) {
-    double* r = allocate_field();
-    double* Ax = allocate_field();
-    minus_laplace(Ax, x, 2.0 / (L - 1));
+double* conjugate_gradient(double* b, double* x, int L, int d) {
+    int N = pow(L,d);
+    double* r = allocate_field(N);
+    double* Ax = allocate_field(N);
+    minus_laplace(Ax, x, 2.0 / (L - 1), d, L, N);
     printf("Ax:\n");
     print_matrix(Ax, L);
     for (int i = 0; i < N; i++) {
@@ -195,17 +115,17 @@ double* conjugate_gradient(double* b, double* x) {
     }
     double tol = 1e-3;
     // p = r;
-    double* p = allocate_field();
+    double* p = allocate_field(N);
     for (int i = 0; i < N; i++) {
         p[i] = r[i];
     }
-    double* tmp = allocate_field();
-    double* r_new = allocate_field();
+    double* tmp = allocate_field(N);
+    double* r_new = allocate_field(N);
     float dx = 2.0/(L-1);
     while (norm(r, N) > tol)
     {
-        double* Ap =  minus_laplace(tmp,p, dx);
-        double dx = 2.0 / (L - 1);
+        double* Ap =  minus_laplace(tmp,p, dx, d, L, N);
+        // double dx = 2.0 / (L - 1);
         double alpha = inner_product(r, r, N) / inner_product(p, Ap, N);
         for (int i = 0; i < N; i++) {
             x[i] = x[i] + alpha * p[i];
@@ -251,19 +171,18 @@ bool every_a(double* x, double* y, int n)
     return true;
 }
 
-// TODO
-int test_cg() {
+int test_cg(int L, int d, int N) {
     int i;
-    double* x = allocate_field();
-    double* b = allocate_field();
+    double* x = allocate_field(N);
+    double* b = allocate_field(N);
     for (i = 0; i < N; i++) {
         x[i] = 0;
         b[i] = 1;
     }
-    x = conjugate_gradient(b, x);
+    x = conjugate_gradient(b, x, L, d);
     print_matrix(x, L);
-    double* Ax = allocate_field();
-    minus_laplace(Ax, x, 2.0 / (L - 1));
+    double* Ax = allocate_field(N);
+    minus_laplace(Ax, x, 2.0 / (L - 1), d, L, N);
     printf("--------------Test result: Ax should be 1 -----------------\n");
     print_matrix(Ax, L);
     assert(every_a(Ax, b, N));
@@ -274,27 +193,28 @@ int test_cg() {
 }
 
 int main() {
-    test_2nd_derivative();
-
+    int L = 5;
+    int d = 2;
+    int N = pow(L,d);
     int i;
     double dx = 2.0 / (L - 1);
     double x, y;
-    double* u = allocate_field();
+    double* u = allocate_field(N);
     u[N] = 0;
     for (i = 0; i < N; i++) {
         int cords[2];
-        index_to_cords(cords,i);
+        index_to_cords(cords,i, L, d);
         int nx = cords[0];
         int ny = cords[1];
         x = -1 + nx * dx;
         y = -1 + ny * dx;
         u[i] = f2(x, y);
     }
-    double* ddf = allocate_field();
-    ddf = minus_laplace(ddf, u,dx);
+    double* ddf = allocate_field(N);
+    ddf = minus_laplace(ddf, u,dx, d, L, N);
     free(u);
     free(ddf);
 
-    test_cg();
+    test_cg( L, d, N);
     return 0;
 }
