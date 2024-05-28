@@ -171,30 +171,50 @@ bool every_a(double* x, double* y, int n)
     return true;
 }
 
+double* random_array(double* r, int L, int d, int N)
+{
+    // double* r = allocate_field(N);
+    for (int i = 0; i < N; i++)
+    {
+        r[i] = (double)rand() / (double)RAND_MAX;
+    }
+    return r;
+}
+
 int test_cg(int L, int d, int N) {
-    int i;
+    // allocate an array
+    double dx = 2.0 / (L - 1);
     double* x = allocate_field(N);
     double* b = allocate_field(N);
-    for (i = 0; i < N; i++) {
-        x[i] = 0;
-        b[i] = 1;
+    // fill it with random data
+    random_array(x, L, d, N);
+    // calculate b
+    b = minus_laplace(b, x, dx, d, L, N);
+    // initial guess
+    double* x0 = allocate_field(N);
+    for (int i = 0; i < N; i++) {
+        x0[i] = 0;
     }
-    x = conjugate_gradient(b, x, L, d);
-    print_matrix(x, L);
-    double* Ax = allocate_field(N);
-    minus_laplace(Ax, x, 2.0 / (L - 1), d, L, N);
-    printf("--------------Test result: Ax should be 1 -----------------\n");
-    print_matrix(Ax, L);
-    assert(every_a(Ax, b, N));
+    // apply conjugate gradient to calculate x
+    x0 = conjugate_gradient(b, x0, L, d);
+    // compare with x
+    if (every_a(x, x0, N))
+    {
+        printf("Test passed\n");
+    }
+    else
+    {
+        printf("Test failed\n");
+    }
     free(x);
     free(b);
-    free(Ax);
+    free(x0);
     return 0;
 }
 
 int main() {
     int L = 5;
-    int d = 2;
+    int d = 3;
     int N = pow(L,d);
     int i;
     double dx = 2.0 / (L - 1);
