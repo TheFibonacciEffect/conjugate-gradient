@@ -42,6 +42,7 @@ int neighbour_index(int* cords, int direction, int amount, int L, int d, int N)
 }
 
 int* index_to_cords(int*cords, int index, int L, int d) {
+    assert(index < pow(L,d) && index >= 0);
     for ( int i=0; i<d; i++)
     {
         cords[i] = index % L;
@@ -214,7 +215,7 @@ int test_cg(int L, int d, int N) {
 
 int main() {
     int L = 5;
-    int d = 3;
+    int d = 2;
     int N = pow(L,d);
     int i;
     double dx = 2.0 / (L - 1);
@@ -235,6 +236,9 @@ int main() {
     free(u);
     free(ddf);
 
+    L = 5;
+    d = 3;
+    N = pow(L,d);
     test_cg( L, d, N);
     return 0;
 }
