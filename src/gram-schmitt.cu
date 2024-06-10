@@ -4,6 +4,7 @@
 #include <cassert>
 #include "common.h"
 #define NTHREADS 32
+#define TYPE float
 // #include <stdlib.h>
 // #include <float.h>
 __global__ void sum(int* g_idata, int* g_odata)
@@ -29,7 +30,20 @@ __global__ void sum(int* g_idata, int* g_odata)
    if (tid == 0) g_odata[blockIdx.x] = sdata[0];
 }
 
+__global__ void inner_product(TYPE *result, TYPE *a, TYPE *b, int n, int arretmetic)
+{
+   assert(blockDim.x*gridDim.x > n);
+   unsigned int tid = threadIdx.x;
+   unsigned int i = blockIdx.x * blockDim.x + arretmetic*threadIdx.x;
 
+   if (i > n) return;
+   for (int j = 0; j < arretmetic && i+j < n; j++)
+   {
+      result[tid] += a[i+j] * b[i+j];
+   }
+
+   return;
+}
 
 __global__ void fill(int* data, int value, const int N)
 {
