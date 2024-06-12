@@ -18,8 +18,10 @@
 
 int main()
 {
+    run_test_gc_gpu();
     int L = 5;
     int d = 3;
     int N = (int)pow(L,d);
     double* b = cuda_allocate_field(N);
+    double* x = cuda_allocate_field(N);
 }

@@ -1,0 +1,1 @@
+int run_test_gc_gpu();
