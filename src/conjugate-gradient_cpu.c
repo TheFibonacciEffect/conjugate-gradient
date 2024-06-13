@@ -1,3 +1,11 @@
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <string.h>
+#include <stdbool.h>
+#include "common.h"
+
 
 float f2(float x, float y) {
     return (x * x + y*y)/2;
@@ -45,7 +53,7 @@ double* minus_laplace(double* ddf, double* u, double dx, int d, int L, int N) {
     for (int ind = 0; ind < N; ind++) {
             int cords[d];
             index_to_cords(cords,ind, L, d);
-            doub laplace_value = 0;
+            double laplace_value = 0;
             for (int i=0; i<d; i++)
             {
                 laplace_value += -u[neighbour_index(cords,i,1, L,d,N)] + 2* u[neighbour_index(cords, i, 0, L,d,N)] - u[neighbour_index(cords, i, -1, L,d,N)];
