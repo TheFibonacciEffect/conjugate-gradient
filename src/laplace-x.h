@@ -63,3 +63,12 @@ __global__ void FUNCTION(minus_laplace_gpu_)(TYPE * ddf, TYPE * u, TYPE dx, int 
         ddf[ind] = laplace_value/pow(dx,d);
     }
 }
+
+// print array
+__global__ void FUNCTION(print_array)(TYPE * array, int N) {
+    int ind = blockIdx.x * blockDim.x + threadIdx.x;
+    while (ind < N) {
+        printf("%f ", array[ind]);
+        ind += blockDim.x * gridDim.x;
+    }
+}
