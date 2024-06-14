@@ -1,3 +1,3 @@
 extern "C" {
-    int run_test_gc_gpu();
+    int run_test_gc_cpu();
 }

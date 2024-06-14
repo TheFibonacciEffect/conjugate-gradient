@@ -27,7 +27,7 @@ double f(int x)
 
 int main()
 {
-    run_test_gc_gpu();
+    run_test_gc_cpu();
     int L = 5;
     int d = 3;
     int N = (int)pow(L,d);

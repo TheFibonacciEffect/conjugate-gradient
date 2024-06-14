@@ -211,7 +211,7 @@ int test_cg(int L, int d, int N) {
     return 0;
 }
 
-int run_test_gc_gpu() {
+int run_test_gc_cpu() {
     int L = 5;
     int d = 2;
     int N = pow(L,d);
