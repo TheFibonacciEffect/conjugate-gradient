@@ -40,4 +40,5 @@ int main()
     {
         printf("%f\n",x_cpu[i]);
     }
+    // CudaDeviceSynchronize();
 }

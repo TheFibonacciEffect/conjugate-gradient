@@ -7,7 +7,7 @@
 #include "common.h"
 
 
-float f2(float x, float y) {
+float square(float x, float y) {
     return (x * x + y*y)/2;
 }
 
@@ -107,8 +107,6 @@ double* conjugate_gradient(double* b, double* x, int L, int d) {
     double* r = allocate_field(N);
     double* Ax = allocate_field(N);
     minus_laplace(Ax, x, 2.0 / (L - 1), d, L, N);
-    printf("Ax:\n");
-    print_matrix(Ax, L);
     for (int i = 0; i < N; i++) {
         r[i] = b[i] - Ax[i];
     }
@@ -180,7 +178,7 @@ double* random_array(double* r, int L, int d, int N)
     return r;
 }
 
-int test_cg(int L, int d, int N) {
+bool test_cg(int L, int d, int N) {
     // allocate an array
     double dx = 2.0 / (L - 1);
     double* x = allocate_field(N);
@@ -197,21 +195,31 @@ int test_cg(int L, int d, int N) {
     // apply conjugate gradient to calculate x
     x0 = conjugate_gradient(b, x0, L, d);
     // compare with x
+    bool passed = false;
     if (every_a(x, x0, N))
     {
-        printf("Test passed\n");
+        passed = true;
     }
     else
     {
-        printf("Test failed\n");
+        passed = false;
     }
     free(x);
     free(b);
     free(x0);
-    return 0;
+    return passed;
 }
 
-int run_test_gc_cpu() {
+bool is_boundary(int* cords, int L, int d) {
+    for (int i = 0; i < d; i++) {
+        if (cords[i] == -1 || cords[i] == L) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool test_laplace() {
     int L = 5;
     int d = 2;
     int N = pow(L,d);
@@ -227,16 +235,114 @@ int run_test_gc_cpu() {
         int ny = cords[1];
         x = -1 + nx * dx;
         y = -1 + ny * dx;
-        u[i] = f2(x, y);
+        u[i] = square(x, y);
     }
     double* ddf = allocate_field(N);
     ddf = minus_laplace(ddf, u,dx, d, L, N);
+
+    for (int i = 0; i < N; i++) {
+        int cords[2];
+        index_to_cords(cords,i, L, d);
+        int nx = cords[0];
+        int ny = cords[1];
+        x = -1 + nx * dx;
+        y = -1 + ny * dx;
+        if (ddf[i] - 1 > 1e-3 || ddf[i] - 1 < -1e-3) {
+            printf("Test failed\n");
+            return false;
+        }
+    }
     free(u);
     free(ddf);
+    return true;
 
+}
+
+bool run_test_gc_cpu() {
     L = 5;
     d = 3;
     N = pow(L,d);
     test_cg( L, d, N);
+    return true;
+}
+
+bool test_inner_product() {
+    double x[3] = {1, 2, 3};
+    double y[3] = {4, 5, 6};
+    double result = inner_product(x, y, 3);
+    if (result - 32 > 1e-3 || result - 32 < -1e-3) {
+        return false;
+    }
+    return true;
+}
+
+bool test_norm() {
+    double x[3] = {1, 2, 3};
+    double result = norm(x, 3);
+    if (result - sqrt(14) > 1e-3 || result - sqrt(14) < -1e-3) {
+        return false;
+    }
+    return true;
+}
+
+bool test_getindex() {
+    int cords[2] = {1, 2};
+    int L = 5;
+    int d = 2;
+    int N = pow(L,d);
+    int result = get_index(cords, L, d, N);
+    if (result != 11) {
+        return false;
+    }
+    return true;
+}
+
+bool test_getindex_border() {
+    int cords[2] = {-1, 0};
+    int L = 5;
+    int d = 2;
+    int N = pow(L,d);
+    int result = get_index(cords, L, d, N);
+    if (result != N) {
+        return false;
+    }
+    return true;
+}
+
+bool test_getindex_edge() {
+    int cords[2] = {5, 5};
+    int L = 5;
+    int d = 2;
+    int N = pow(L,d);
+    int result = get_index(cords, L, d, N);
+    if (result != N-1) {
+        return false;
+    }
+    return true;
+}
+
+bool test_neighbour_index() {
+    int cords[2] = {1, 2};
+    int direction = 0;
+    int amount = 1;
+    int L = 5;
+    int d = 2;
+    int N = pow(L,d);
+    int result = neighbour_index(cords, direction, amount, L, d, N);
+    if (result != 6) {
+        return false;
+    }
+    return true;
+}
+
+int run_tests_cpu() {
+    assert(test_laplace());
+    assert(run_test_gc_cpu());
+    assert(test_inner_product());
+    assert(test_norm());
+    assert(test_getindex());
+    assert(test_getindex_border());
+    assert(test_getindex_edge());
+    assert(test_neighbour_index());
     return 0;
 }
