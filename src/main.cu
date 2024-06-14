@@ -28,17 +28,17 @@ double f(int x)
 int main()
 {
     run_test_gc_cpu();
-    int L = 5;
-    int d = 3;
-    int N = (int)pow(L,d);
-    double* b = cuda_allocate_field_d(N);
-    double* x = cuda_allocate_field_d(N);
-    double* x_cpu = (double*)malloc(N*sizeof(double));
-    apply_function_gpu_d<<<1000,64>>>(x,f,N,L,d);    
-    cudaMemcpy(x_cpu,x,N*sizeof(double),cudaMemcpyDeviceToHost);
-    for (int i = 0; i < N; i++)
-    {
-        printf("%f\n",x_cpu[i]);
-    }
+    // int L = 5;
+    // int d = 3;
+    // int N = (int)pow(L,d);
+    // double* b = cuda_allocate_field_d(N);
+    // double* x = cuda_allocate_field_d(N);
+    // double* x_cpu = (double*)malloc(N*sizeof(double));
+    // apply_function_gpu_d<<<1000,64>>>(x,f,N,L,d);    
+    // cudaMemcpy(x_cpu,x,N*sizeof(double),cudaMemcpyDeviceToHost);
+    // for (int i = 0; i < N; i++)
+    // {
+    //     printf("%f\n",x_cpu[i]);
+    // }
     // CudaDeviceSynchronize();
 }

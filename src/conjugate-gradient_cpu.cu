@@ -259,9 +259,9 @@ bool test_laplace() {
 }
 
 bool run_test_gc_cpu() {
-    L = 5;
-    d = 3;
-    N = pow(L,d);
+    int L = 5;
+    int d = 3;
+    int N = pow(L,d);
     test_cg( L, d, N);
     return true;
 }
@@ -335,7 +335,7 @@ bool test_neighbour_index() {
     return true;
 }
 
-int run_tests_cpu() {
+extern int run_tests_cpu() {
     assert(test_laplace());
     assert(run_test_gc_cpu());
     assert(test_inner_product());
@@ -344,5 +344,7 @@ int run_tests_cpu() {
     assert(test_getindex_border());
     assert(test_getindex_edge());
     assert(test_neighbour_index());
+    assert(false);
+    printf("Tests Passed!\n");
     return 0;
 }

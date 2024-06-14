@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.8)
 
+
+if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+  set(CMAKE_CUDA_ARCHITECTURES 75)
+endif()
+
+
 project(IterativeSolvers C CXX CUDA)
 
 
@@ -7,7 +13,7 @@ project(IterativeSolvers C CXX CUDA)
 # "-Xcompiler -rdynamic -lineinfo" -> needed for cuda-memcheck
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3 -Xcompiler -rdynamic -lineinfo")
 
-set(src common.h ./include/conjugate-gradient_cpu.h conjugate-gradient_cpu.c)
+set(src common.h ./conjugate-gradient_cpu.h conjugate-gradient_cpu.cu)
 
 add_executable(IterativeSolvers main.cu ${src})
 set_property(TARGET IterativeSolvers PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS}")
