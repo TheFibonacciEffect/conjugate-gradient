@@ -8,7 +8,7 @@
 
 
 float square(float x, float y) {
-    return (x * x + y*y)/2;
+    return (x * x + y*y)/4;
 }
 
 
@@ -212,7 +212,7 @@ bool test_cg(int L, int d, int N) {
 
 bool is_boundary(int* cords, int L, int d) {
     for (int i = 0; i < d; i++) {
-        if (cords[i] == -1 || cords[i] == L) {
+        if (cords[i] == 0 || cords[i] == L-1) {
             return true;
         }
     }
@@ -247,8 +247,9 @@ bool test_laplace() {
         int ny = cords[1];
         x = -1 + nx * dx;
         y = -1 + ny * dx;
-        if (ddf[i] - 1 > 1e-3 || ddf[i] - 1 < -1e-3) {
+        if (!is_boundary(cords,L,d) && !(ddf[i] - 1 > 1e-3 || ddf[i] - 1 < -1e-3)) {
             printf("Test failed\n");
+            printf("x: %f, y: %f, ddf: %f\n", x, y, ddf[i]);
             return false;
         }
     }
@@ -259,9 +260,9 @@ bool test_laplace() {
 }
 
 bool run_test_gc_cpu() {
-    L = 5;
-    d = 3;
-    N = pow(L,d);
+    int L = 5;
+    int d = 3;
+    int N = pow(L,d);
     test_cg( L, d, N);
     return true;
 }
@@ -297,8 +298,8 @@ bool test_getindex() {
     return true;
 }
 
-bool test_getindex_border() {
-    int cords[2] = {-1, 0};
+bool test_getindex_edge() {
+    int cords[2] = {5, 5}; // outside the array
     int L = 5;
     int d = 2;
     int N = pow(L,d);
@@ -309,22 +310,36 @@ bool test_getindex_border() {
     return true;
 }
 
-bool test_getindex_edge() {
-    int cords[2] = {5, 5};
+bool test_getindex_edge2() {
+    int cords[2] = {-1, 0}; // outside the array
     int L = 5;
     int d = 2;
     int N = pow(L,d);
     int result = get_index(cords, L, d, N);
-    if (result != N-1) {
+    if (result != N) {
         return false;
     }
     return true;
 }
 
 bool test_neighbour_index() {
+    int cords[2] = {0, 2};
+    int direction = 1;
+    int amount = -1;
+    int L = 5;
+    int d = 2;
+    int N = pow(L,d);
+    int result = neighbour_index(cords, direction, amount, L, d, N);
+    if (result != 5) {
+        return false;
+    }
+    return true;
+}
+
+bool test_neighbour_index2() {
     int cords[2] = {1, 2};
-    int direction = 0;
-    int amount = 1;
+    int direction = 1;
+    int amount = -1;
     int L = 5;
     int d = 2;
     int N = pow(L,d);
@@ -341,8 +356,14 @@ int run_tests_cpu() {
     assert(test_inner_product());
     assert(test_norm());
     assert(test_getindex());
-    assert(test_getindex_border());
+    assert(test_getindex_edge2());
     assert(test_getindex_edge());
     assert(test_neighbour_index());
+    assert(test_neighbour_index2());
+    return 0;
+}
+
+int main() {
+    run_tests_cpu();
     return 0;
 }
