@@ -20,7 +20,7 @@ __device__ int neighbour_index_gpu(int* cords, int direction, int amount, int L,
 }
 
 
-__device__ int* index_to_cords(int*cords, int index, int L, int d) {
+__device__ int* index_to_cords_cu(int*cords, int index, int L, int d) {
     assert(index < pow(L,d) && index >= 0);
     for ( int i=0; i<d; i++)
     {
@@ -36,7 +36,7 @@ __global__ void FUNCTION(apply_function_gpu)(TYPE * result, TYPE (*f)(int), int 
     int ind = blockIdx.x * blockDim.x + threadIdx.x;
     if (ind < N) {
         int cords[dmax];
-        index_to_cords(cords, ind,  L, d);
+        index_to_cords_cu(cords, ind,  L, d);
         result[ind] = f(cords[0]);
     }
 }
@@ -54,7 +54,7 @@ __global__ void FUNCTION(minus_laplace_gpu_)(TYPE * ddf, TYPE * u, TYPE dx, int 
     int ind = blockIdx.x * blockDim.x + threadIdx.x;
     if (ind < N) {
         int cords[dmax];
-        index_to_cords(cords,ind, L, d);
+        index_to_cords_cu(cords,ind, L, d);
         TYPE laplace_value = 0;
         for (int i = 0; i < d; i++)
         {
