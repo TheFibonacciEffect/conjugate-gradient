@@ -92,7 +92,7 @@ void print_matrix(double* A, int n) {
 
 double* allocate_field(int N)
 {
-    double* r = calloc(N+1,sizeof(double));
+    double* r = (double *) calloc(N+1,sizeof(double));
     if (r == NULL)
     {
         printf("Memory allocation failed");
