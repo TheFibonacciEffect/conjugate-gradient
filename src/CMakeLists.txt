@@ -8,7 +8,7 @@ project(IterativeSolvers C)
 # set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3 -Xcompiler -rdynamic -lineinfo")
 
 add_executable(conjugate-gradient ./conjugate-gradient_cpu.c)
-# set_property(TARGET IterativeSolvers PROPERTY LINK_FLAGS "-lm")
+set_property(TARGET conjugate-gradient PROPERTY LINK_FLAGS "-lm")
 # set_target_properties(IterativeSolvers PROPERTIES LINKER_LANGUAGE CXX)
 
 

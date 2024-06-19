@@ -4,7 +4,6 @@
 #include <assert.h>
 #include <string.h>
 #include <stdbool.h>
-#include "common.h"
 
 
 float square(float x, float y) {
