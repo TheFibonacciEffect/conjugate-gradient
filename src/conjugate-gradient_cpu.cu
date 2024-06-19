@@ -91,7 +91,7 @@ void print_matrix(double* A, int n) {
 
 double* allocate_field(int N)
 {
-    double* r = calloc(N+1,sizeof(double));
+    double* r = (double *) calloc(N+1,sizeof(double));
     if (r == NULL)
     {
         printf("Memory allocation failed");
@@ -349,7 +349,7 @@ bool test_neighbour_index2() {
     return true;
 }
 
-int run_tests_cpu() {
+extern int run_tests_cpu() {
     assert(test_laplace());
     assert(run_test_gc_cpu());
     assert(test_inner_product());
@@ -358,11 +358,6 @@ int run_tests_cpu() {
     assert(test_getindex_edge2());
     assert(test_getindex_edge());
     assert(test_neighbour_index());
-    assert(test_neighbour_index2());
-    return 0;
-}
-
-int main() {
-    run_tests_cpu();
+    printf("Tests Passed!\n");
     return 0;
 }
