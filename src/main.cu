@@ -27,7 +27,9 @@ double f(int x)
 
 int main()
 {
-    run_test_gc_cpu();
+    printf("löaksjföljkas\n");
+    run_tests_cpu();
+    printf("löaksjföljkas\n");
     // int L = 5;
     // int d = 3;
     // int N = (int)pow(L,d);
