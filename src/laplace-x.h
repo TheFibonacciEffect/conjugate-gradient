@@ -34,9 +34,13 @@ __device__ int* index_to_cords_cu(int*cords, int index, int L, int d) {
 
 __global__ void FUNCTION(apply_function_gpu)(TYPE * result, TYPE (*f)(int), int N, int L, int d) {
     int ind = blockIdx.x * blockDim.x + threadIdx.x;
-    if (ind < N) {
+    for (int i=ind; i < N; i+=blockDim.x) {
+        printf("N = %d\n", N);
+        printf("blockDim.x = %d\n", blockDim.x);
+        printf("i = %d\n", i);
         int cords[dmax];
-        index_to_cords_cu(cords, ind,  L, d);
+        index_to_cords_cu(cords, ind,  L, d); // TODO why does this function stop the execution?
+        printf("f = %f\n",f(cords[0]));
         result[ind] = f(cords[0]);
     }
 }
