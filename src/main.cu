@@ -19,11 +19,6 @@
 // #include "laplace-x.h"
 
 #include "conjugate-gradient_cpu.h"
-double f(int x)
-{
-    int L = 5;
-    return 1;
-}
 
 int main()
 {
@@ -34,12 +29,13 @@ int main()
     double* b = cuda_allocate_field_d(N);
     double* x = cuda_allocate_field_d(N);
     double* x_cpu = (double*)malloc(N*sizeof(double));
-    apply_function_gpu_d<<<1,1>>>(x,f,N,L,d);    
+    apply_function_gpu_d<<<1000,128>>>(x,N,L,d);    
     cudaDeviceSynchronize();
     cudaMemcpy(x_cpu,x,N*sizeof(double),cudaMemcpyDeviceToHost);
     for (int i = 0; i < N; i++)
     {
-        // printf("%f\n",x_cpu[i]);
+        printf("%f\n",x_cpu[i]);
     }
-    cudaDeviceSynchronize();
+    gpuErrchk( cudaPeekAtLastError() );
+    gpuErrchk( cudaDeviceSynchronize() );
 }

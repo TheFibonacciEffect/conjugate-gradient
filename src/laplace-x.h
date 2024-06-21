@@ -30,17 +30,22 @@ __device__ int* index_to_cords_cu(int*cords, int index, int L, int d) {
     return cords;
 }
 
+__device__ __host__ double f(int x)
+{
+    int L = 5;
+    return 1;
+}
+
+
 # endif
 
-__global__ void FUNCTION(apply_function_gpu)(TYPE * result, TYPE (*f)(int), int N, int L, int d) {
+
+
+__global__ void FUNCTION(apply_function_gpu)(TYPE * result, int N, int L, int d) {
     int ind = blockIdx.x * blockDim.x + threadIdx.x;
     for (int i=ind; i < N; i+=blockDim.x) {
-        printf("N = %d\n", N);
-        printf("blockDim.x = %d\n", blockDim.x);
-        printf("i = %d\n", i);
         int cords[dmax];
-        index_to_cords_cu(cords, ind,  L, d); // TODO why does this function stop the execution?
-        printf("f = %f\n",f(cords[0]));
+        index_to_cords_cu(cords, ind,  L, d);
         result[ind] = f(cords[0]);
     }
 }
@@ -53,7 +58,6 @@ __host__ TYPE* FUNCTION(cuda_allocate_field)(int N) {
 }
 
 
-// this is a type agnostic version of the laplace operator and associated functions on the gpu
 __global__ void FUNCTION(minus_laplace_gpu_)(TYPE * ddf, TYPE * u, TYPE dx, int d, int L, int N) {
     int ind = blockIdx.x * blockDim.x + threadIdx.x;
     if (ind < N) {
