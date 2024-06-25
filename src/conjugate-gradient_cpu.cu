@@ -141,6 +141,51 @@ double* conjugate_gradient(double* b, double* x, int L, int d) {
     return x;
 }
 
+double* preconditioned_cg(double* b, double* x, int L, int d) {
+    int N = pow(L,d);
+    double* r = allocate_field(N);
+    double* Ax = allocate_field(N);
+    minus_laplace(Ax, x, 2.0 / (L - 1), d, L, N);
+    for (int i = 0; i < N; i++) {
+        r[i] = b[i] - Ax[i];
+    }
+    double tol = 1e-3;
+    // p = M^-1r;
+    double* p = allocate_field(N);
+    for (int i = 0; i < N; i++) {
+        p[i] = r[i];
+    }
+    double* tmp = allocate_field(N);
+    p = conjugate_gradient(p, tmp, L, d);
+    double* r_new = allocate_field(N);
+    float dx = 2.0/(L-1);
+    while (norm(r, N) > tol)
+    {
+        double* Ap =  minus_laplace(tmp,p, dx, d, L, N);
+        double* Minv_r = conjugate_gradient(r, tmp, L, d);
+        // double dx = 2.0 / (L - 1);
+        double alpha = inner_product(r, Minv_r, N) / inner_product(p, Ap, N);
+        for (int i = 0; i < N; i++) {
+            x[i] = x[i] + alpha * p[i];
+            r_new[i] = r[i] - alpha * Ap[i];
+        }
+        double* Minv_r_new = conjugate_gradient(r_new, tmp, L, d);
+        double beta = inner_product(r_new, Minv_r_new, N) / inner_product(r, r, N);
+        for (int i = 0; i < N; i++) {
+            p[i] = r_new[i] + beta * p[i];
+            r[i] = r_new[i];
+        }
+    }
+    free(tmp);
+    free(r);
+    free(r_new);
+    free(Ax);
+    free(p);
+    return x;
+}
+
+// TESTS
+
 bool every_f(double* x, double y, int n)
 {
     double tol = 1e-3;
@@ -193,6 +238,38 @@ bool test_cg(int L, int d, int N) {
     }
     // apply conjugate gradient to calculate x
     x0 = conjugate_gradient(b, x0, L, d);
+    // compare with x
+    bool passed = false;
+    if (every_a(x, x0, N))
+    {
+        passed = true;
+    }
+    else
+    {
+        passed = false;
+    }
+    free(x);
+    free(b);
+    free(x0);
+    return passed;
+}
+
+bool test_preconditioned_cg(int L, int d, int N) {
+    // allocate an array
+    double dx = 2.0 / (L - 1);
+    double* x = allocate_field(N);
+    double* b = allocate_field(N);
+    // fill it with random data
+    random_array(x, L, d, N);
+    // calculate b
+    b = minus_laplace(b, x, dx, d, L, N);
+    // initial guess
+    double* x0 = allocate_field(N);
+    for (int i = 0; i < N; i++) {
+        x0[i] = 0;
+    }
+    // apply conjugate gradient to calculate x
+    x0 = preconditioned_cg(b, x0, L, d);
     // compare with x
     bool passed = false;
     if (every_a(x, x0, N))
@@ -262,8 +339,7 @@ bool run_test_gc_cpu() {
     int L = 5;
     int d = 3;
     int N = pow(L,d);
-    test_cg( L, d, N);
-    return true;
+    return test_cg( L, d, N);
 }
 
 bool test_inner_product() {
@@ -358,6 +434,7 @@ extern int run_tests_cpu() {
     assert(test_getindex_edge2());
     assert(test_getindex_edge());
     assert(test_neighbour_index());
+    assert(test_preconditioned_cg(5, 2, 25));
     printf("Tests Passed!\n");
     return 0;
 }
