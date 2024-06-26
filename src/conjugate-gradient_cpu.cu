@@ -101,7 +101,10 @@ double* allocate_field(int N)
     return r;
 }
 
-double* conjugate_gradient(double* b, double* x, int L, int d) {
+double* conjugate_gradient(const double* b, double* x, int L, int d) {
+    // Solve Ax = b
+    // x is initial guess
+    // return x
     int N = pow(L,d);
     double* r = allocate_field(N);
     double* Ax = allocate_field(N);
@@ -138,7 +141,7 @@ double* conjugate_gradient(double* b, double* x, int L, int d) {
     free(r_new);
     free(Ax);
     free(p);
-    return x;
+    return x; //TODO: Maybe delete this => Leads to errors
 }
 
 double* preconditioned_cg(double* b, double* x, int L, int d) {
@@ -152,35 +155,36 @@ double* preconditioned_cg(double* b, double* x, int L, int d) {
     double tol = 1e-3;
     // p = M^-1r;
     double* p = allocate_field(N);
-    for (int i = 0; i < N; i++) {
-        p[i] = r[i];
-    }
-    double* tmp = allocate_field(N);
-    p = conjugate_gradient(p, tmp, L, d);
+    conjugate_gradient(r, p, L, d);
     double* r_new = allocate_field(N);
     float dx = 2.0/(L-1);
+    double* Minv_r_new = allocate_field(N);
+    double* tmp = allocate_field(N);
+    double* Minv_r = allocate_field(N);
+    double* Ap = allocate_field(N);
     while (norm(r, N) > tol)
     {
-        double* Ap =  minus_laplace(tmp,p, dx, d, L, N);
-        double* Minv_r = conjugate_gradient(r, tmp, L, d);
+        minus_laplace(Ap,p, dx, d, L, N);
+        conjugate_gradient(r, Minv_r, L, d);
         // double dx = 2.0 / (L - 1);
         double alpha = inner_product(r, Minv_r, N) / inner_product(p, Ap, N);
         for (int i = 0; i < N; i++) {
             x[i] = x[i] + alpha * p[i];
             r_new[i] = r[i] - alpha * Ap[i];
         }
-        double* Minv_r_new = conjugate_gradient(r_new, tmp, L, d);
+        conjugate_gradient(r_new, Minv_r_new, L, d);
         double beta = inner_product(r_new, Minv_r_new, N) / inner_product(r, r, N);
         for (int i = 0; i < N; i++) {
             p[i] = r_new[i] + beta * p[i];
             r[i] = r_new[i];
         }
     }
-    free(tmp);
+    free(Minv_r);
+    free(Minv_r_new);
     free(r);
     free(r_new);
     free(Ax);
-    free(p);
+    free(p); // aparently  double free?
     return x;
 }
 
