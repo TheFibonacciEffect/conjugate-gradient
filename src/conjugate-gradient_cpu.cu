@@ -72,7 +72,7 @@ double norm(double* x,int n) {
     return sqrt(norm);
 }
 
-double inner_product(double* x, double* y, int n) {
+double inner_product(const double* x, const double* y, int n) {
     double product = 0;
     for (int i = 0; i < n; i++) {
         product += x[i] * y[i];
@@ -112,7 +112,7 @@ double* conjugate_gradient(const double* b, double* x, int L, int d) {
     for (int i = 0; i < N; i++) {
         r[i] = b[i] - Ax[i];
     }
-    double tol = 1e-3;
+    double tol = 1e-5*inner_product(b,b,N);
     // p = r;
     double* p = allocate_field(N);
     for (int i = 0; i < N; i++) {
@@ -124,7 +124,7 @@ double* conjugate_gradient(const double* b, double* x, int L, int d) {
     int i = 0;
     while (norm(r, N) > tol)
     {
-        printf("inner res: %f, i=%d \n" ,norm(r, N),i);
+        printf("inner res: %g, i=%d \n" ,norm(r, N),i);
         i++;
         double* Ap =  minus_laplace(tmp,p, dx, d, L, N);
         // double dx = 2.0 / (L - 1);
@@ -147,6 +147,14 @@ double* conjugate_gradient(const double* b, double* x, int L, int d) {
     return x; //TODO: Maybe delete this => Leads to errors
 }
 
+void preconditioner(double* b, double* x, int L, int d)
+{
+    for (int i=0; i< pow(L,d); i++)
+    {
+        x[i] = b[i];
+    }
+}
+
 double* preconditioned_cg(double* b, double* x, int L, int d) {
     int N = pow(L,d);
     double* r = allocate_field(N);
@@ -155,10 +163,10 @@ double* preconditioned_cg(double* b, double* x, int L, int d) {
     for (int i = 0; i < N; i++) {
         r[i] = b[i] - Ax[i];
     }
-    double tol = 1e-3;
+    double tol = 1e-8*inner_product(b,b,N);
     // p = M^-1r;
     double* p = allocate_field(N);
-    conjugate_gradient(r, p, L, d);
+    preconditioner(r, p, L, d);
     double* r_new = allocate_field(N);
     float dx = 2.0/(L-1);
     double* Minv_r_new = allocate_field(N);
@@ -184,9 +192,9 @@ double* preconditioned_cg(double* b, double* x, int L, int d) {
             x[i] = x[i] + alpha * p[i];
             r_new[i] = r[i] - alpha * Ap[i];
         }
-        printf("outer res: %f, i=%d \n" ,norm(r_new, N),i);
+        printf("outer res: %g, i=%d \n" ,norm(r_new, N),i);
         if (norm(r_new, N) < tol) break;
-        conjugate_gradient(r_new, Minv_r_new, L, d);
+        preconditioner(r_new, Minv_r_new, L, d);
         r_newMinvr_new = inner_product(r_new, Minv_r_new, N);
         double beta = r_newMinvr_new / rMinvr;
         for (int i = 0; i < N; i++) {
@@ -447,7 +455,6 @@ bool test_neighbour_index2() {
 
 extern int run_tests_cpu() {
     assert(test_laplace());
-    assert(run_test_gc_cpu());
     assert(test_inner_product());
     assert(test_norm());
     assert(test_getindex());
@@ -456,6 +463,7 @@ extern int run_tests_cpu() {
     assert(test_neighbour_index());
     printf("test preconditioned cg\n");
     assert(test_preconditioned_cg(5, 2, 25));
+    assert(run_test_gc_cpu());
     printf("Tests Passed!\n");
     return 0;
 }
