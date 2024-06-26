@@ -162,22 +162,27 @@ double* preconditioned_cg(double* b, double* x, int L, int d) {
     double* tmp = allocate_field(N);
     double* Minv_r = allocate_field(N);
     double* Ap = allocate_field(N);
+    double rMinvr;
+    conjugate_gradient(r, Minv_r, L, d);
+    rMinvr = inner_product(r, Minv_r, N);
+    double r_newMinvr_new;
     while (norm(r, N) > tol)
     {
         minus_laplace(Ap,p, dx, d, L, N);
-        conjugate_gradient(r, Minv_r, L, d);
         // double dx = 2.0 / (L - 1);
-        double alpha = inner_product(r, Minv_r, N) / inner_product(p, Ap, N);
+        double alpha =  rMinvr / inner_product(p, Ap, N);
         for (int i = 0; i < N; i++) {
             x[i] = x[i] + alpha * p[i];
             r_new[i] = r[i] - alpha * Ap[i];
         }
         conjugate_gradient(r_new, Minv_r_new, L, d);
-        double beta = inner_product(r_new, Minv_r_new, N) / inner_product(r, r, N);
+        r_newMinvr_new = inner_product(r_new, Minv_r_new, N);
+        double beta = r_newMinvr_new / rMinvr;
         for (int i = 0; i < N; i++) {
             p[i] = r_new[i] + beta * p[i];
             r[i] = r_new[i];
         }
+        rMinvr = r_newMinvr_new;
     }
     free(Minv_r);
     free(Minv_r_new);
