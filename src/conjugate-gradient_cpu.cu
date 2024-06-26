@@ -149,6 +149,7 @@ double* conjugate_gradient(const double* b, double* x, int L, int d) {
 
 void preconditioner(double* b, double* x, int L, int d)
 {
+    // For testing
     // for (int i=0; i< pow(L,d); i++)
     // {
     //     x[i] = b[i];
@@ -209,7 +210,7 @@ double* preconditioned_cg(double* b, double* x, int L, int d) {
     free(r);
     free(r_new);
     free(Ax);
-    free(p); // aparently  double free?
+    free(p);
     return x;
 }
 
