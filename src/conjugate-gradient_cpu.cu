@@ -124,7 +124,6 @@ double* conjugate_gradient(const double* b, double* x, int L, int d) {
     int i = 0;
     while (norm(r, N) > tol)
     {
-        printf("inner res: %g, i=%d \n" ,norm(r, N),i);
         i++;
         double* Ap =  minus_laplace(tmp,p, dx, d, L, N);
         // double dx = 2.0 / (L - 1);
@@ -138,6 +137,7 @@ double* conjugate_gradient(const double* b, double* x, int L, int d) {
             p[i] = r_new[i] + beta * p[i];
             r[i] = r_new[i];
         }
+        printf("inner res: %g, i=%d \n" ,norm(r, N),i);
     }
     free(tmp);
     free(r);
@@ -149,10 +149,11 @@ double* conjugate_gradient(const double* b, double* x, int L, int d) {
 
 void preconditioner(double* b, double* x, int L, int d)
 {
-    for (int i=0; i< pow(L,d); i++)
-    {
-        x[i] = b[i];
-    }
+    // for (int i=0; i< pow(L,d); i++)
+    // {
+    //     x[i] = b[i];
+    // }
+    conjugate_gradient(b, x,  L, d);
 }
 
 double* preconditioned_cg(double* b, double* x, int L, int d) {
@@ -198,7 +199,7 @@ double* preconditioned_cg(double* b, double* x, int L, int d) {
         r_newMinvr_new = inner_product(r_new, Minv_r_new, N);
         double beta = r_newMinvr_new / rMinvr;
         for (int i = 0; i < N; i++) {
-            p[i] = r_new[i] + beta * p[i];
+            p[i] = Minv_r_new[i] + beta * p[i];
             r[i] = r_new[i];
         }
         rMinvr = r_newMinvr_new;
