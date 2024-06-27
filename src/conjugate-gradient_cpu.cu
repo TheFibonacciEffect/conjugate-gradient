@@ -112,7 +112,7 @@ double* conjugate_gradient(const double* b, double* x, int L, int d) {
     for (int i = 0; i < N; i++) {
         r[i] = b[i] - Ax[i];
     }
-    double tol = 1e-5*inner_product(b,b,N);
+    double tol = 1e-12*inner_product(b,b,N);
     // p = r;
     double* p = allocate_field(N);
     for (int i = 0; i < N; i++) {
