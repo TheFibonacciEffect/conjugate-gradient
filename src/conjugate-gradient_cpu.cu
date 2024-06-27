@@ -147,6 +147,52 @@ double* conjugate_gradient(const double* b, double* x, int L, int d) {
     return x; //TODO: Maybe delete this => Leads to errors
 }
 
+float* conjugate_gradient_float(const float* b, float* x, int L, int d) {
+    // Solve Ax = b
+    // x is initial guess
+    // return x
+    int N = pow(L,d);
+    float* r = allocate_field(N);
+    float* Ax = allocate_field(N);
+    minus_laplace(Ax, x, 2.0 / (L - 1), d, L, N);
+    for (int i = 0; i < N; i++) {
+        r[i] = b[i] - Ax[i];
+    }
+    float tol = 1e-5*inner_product(b,b,N);
+    // p = r;
+    float* p = allocate_field(N);
+    for (int i = 0; i < N; i++) {
+        p[i] = r[i];
+    }
+    float* tmp = allocate_field(N);
+    float* r_new = allocate_field(N);
+    float dx = 2.0/(L-1);
+    int i = 0;
+    while (norm(r, N) > tol)
+    {
+        i++;
+        float* Ap =  minus_laplace(tmp,p, dx, d, L, N);
+        // float dx = 2.0 / (L - 1);
+        float alpha = inner_product(r, r, N) / inner_product(p, Ap, N);
+        for (int i = 0; i < N; i++) {
+            x[i] = x[i] + alpha * p[i];
+            r_new[i] = r[i] - alpha * Ap[i];
+        }
+        float beta = inner_product(r_new, r_new, N) / inner_product(r, r, N);
+        for (int i = 0; i < N; i++) {
+            p[i] = r_new[i] + beta * p[i];
+            r[i] = r_new[i];
+        }
+        printf("inner res: %g, i=%d \n" ,norm(r, N),i);
+    }
+    free(tmp);
+    free(r);
+    free(r_new);
+    free(Ax);
+    free(p);
+    return x; //TODO: Maybe delete this => Leads to errors
+}
+
 void preconditioner(double* b, double* x, int L, int d)
 {
     // For testing
@@ -154,7 +200,7 @@ void preconditioner(double* b, double* x, int L, int d)
     // {
     //     x[i] = b[i];
     // }
-    conjugate_gradient(b, x,  L, d);
+    conjugate_gradient_float(b, x,  L, d);
 }
 
 double* preconditioned_cg(double* b, double* x, int L, int d) {
