@@ -32,10 +32,10 @@ int main()
     apply_function_gpu_d<<<1000,128>>>(x,N,L,d);    
     cudaDeviceSynchronize();
     cudaMemcpy(x_cpu,x,N*sizeof(double),cudaMemcpyDeviceToHost);
-    for (int i = 0; i < N; i++)
-    {
-        printf("%f\n",x_cpu[i]);
-    }
+    // for (int i = 0; i < N; i++)
+    // {
+    //     printf("%f\n",x_cpu[i]);
+    // }
     gpuErrchk( cudaPeekAtLastError() );
     gpuErrchk( cudaDeviceSynchronize() );
 }

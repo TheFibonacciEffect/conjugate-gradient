@@ -293,6 +293,7 @@ double* preconditioned_cg(double* b, double* x, int L, int d) {
         i++;
         minus_laplace(Ap,p, dx, d, L, N);
         double alpha =  rMinvr / inner_product(p, Ap, N); // two extremly large numbers => becomes extremly small (~ 1e-32) => slow convergence
+        printf("rMinvr = %g, pAp = %g\n", rMinvr , inner_product(p, Ap, N));
         for (int i = 0; i < N; i++) {
             x[i] = x[i] + alpha * p[i];
             r[i] = r[i] - alpha * Ap[i];
