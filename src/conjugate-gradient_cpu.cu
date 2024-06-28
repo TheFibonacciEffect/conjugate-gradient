@@ -73,6 +73,14 @@ double norm(double* x,int n) {
     return sqrt(norm);
 }
 
+double norm(const double* x,int n) {
+    double norm = 0;
+    for (int i = 0; i < n; i++) {
+        norm += x[i] * x[i];
+    }
+    return sqrt(norm);
+}
+
 double inner_product(const double* x, const double* y, int n) {
     double product = 0;
     for (int i = 0; i < n; i++) {
@@ -113,7 +121,7 @@ double* conjugate_gradient(const double* b, double* x, int L, int d) {
     for (int i = 0; i < N; i++) {
         r[i] = b[i] - Ax[i];
     }
-    double tol = 1e-2*inner_product(b,b,N);
+    double tol = 1e-6*norm(b,N);
     // p = r;
     double* p = allocate_field(N);
     for (int i = 0; i < N; i++) {
@@ -195,7 +203,7 @@ double* conjugate_gradient(const double* b, double* x, int L, int d) {
 //     return x; //TODO: Maybe delete this => Leads to errors
 // }
 
-void preconditioner(double* b, double* x, int L, int d)
+double preconditioner(double* b, double* x, int L, int d, double errtol)
 {
     // For testing
     // for (int i=0; i< pow(L,d); i++)
@@ -209,7 +217,7 @@ void preconditioner(double* b, double* x, int L, int d)
     for (int i = 0; i < N; i++) {
         r[i] = b[i];
     }
-    double tol = 1e-1*norm(b,N);
+    double tol = errtol*norm(b,N);
     // p = r;
     double* p = allocate_field(N);
     for (int i = 0; i < N; i++) {
@@ -224,29 +232,34 @@ void preconditioner(double* b, double* x, int L, int d)
         x[k] = 0;
 
     }
-    while (norm(r, N) > tol)
+    double res = norm(r, N);
+
+    while (res > tol)
     {
         i++;
         minus_laplace(Ap,p, dx, d, L, N);
         // double dx = 2.0 / (L - 1);
         // TODO Reuse variables
-        double alpha = inner_product(r, r, N) / inner_product(p, Ap, N);
+        double rr = inner_product(r,r,N);
+        double alpha = rr / inner_product(p, Ap, N);
         for (int i = 0; i < N; i++) {
             x[i] = x[i] + alpha * p[i];
             r_new[i] = r[i] - alpha * Ap[i];
         }
-        double beta = inner_product(r_new, r_new, N) / inner_product(r, r, N);
+        double beta = inner_product(r_new, r_new, N) / rr;
         for (int i = 0; i < N; i++) {
             p[i] = r_new[i] + beta * p[i];
             r[i] = r_new[i];
         }
-        printf("inner res: %g, i=%d \n" ,norm(r, N),i);
+        res = norm(r, N);
+        printf("inner res: %g, i=%d \n" ,res,i);
     }
     free(Ap);
     free(r);
     free(r_new);
     free(Ax);
     free(p);
+    return res;
 }
 
 double* preconditioned_cg(double* b, double* x, int L, int d) {
@@ -261,7 +274,7 @@ double* preconditioned_cg(double* b, double* x, int L, int d) {
     double tol = 1e-8*norm(b,N);
     // p = M^-1r;
     double* p = allocate_field(N);
-    preconditioner(r, p, L, d);
+    preconditioner(r, p, L, d, 1e-2);
     float dx = 2.0/(L-1);
     // TODO from here no more allocations are needed
     double* Minv_r_new = Ax;
@@ -278,17 +291,15 @@ double* preconditioned_cg(double* b, double* x, int L, int d) {
     while (i < maxitter)
     {
         i++;
-
         minus_laplace(Ap,p, dx, d, L, N);
-        // double dx = 2.0 / (L - 1);
-        double alpha =  rMinvr / inner_product(p, Ap, N);
+        double alpha =  rMinvr / inner_product(p, Ap, N); // two extremly large numbers => becomes extremly small (~ 1e-32) => slow convergence
         for (int i = 0; i < N; i++) {
             x[i] = x[i] + alpha * p[i];
             r[i] = r[i] - alpha * Ap[i];
         }
         printf("outer res: %g, i=%d \n" ,norm(r, N),i);
         if (norm(r, N) < tol) break;
-        preconditioner(r, Minv_r_new, L, d);
+        preconditioner(r, Minv_r_new, L, d, 1e-2);
         r_newMinvr_new = inner_product(r, Minv_r_new, N);
         double beta = r_newMinvr_new / rMinvr;
         for (int i = 0; i < N; i++) {
@@ -545,6 +556,17 @@ bool test_neighbour_index2() {
     }
     return true;
 }
+
+// bool test_symmetry()
+// {
+//     // TODO
+//     L = 30;
+//     d = 5;
+//     double[(int) pow(L,d)] x;
+//     double[(int) pow(L,d)] y;
+//     random_array(x,L,d);
+//     return true;
+// }
 
 extern int run_tests_cpu() {
     assert(test_laplace());
