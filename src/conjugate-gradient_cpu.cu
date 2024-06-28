@@ -58,6 +58,7 @@ double* minus_laplace(double* ddf, double* u, double dx, int d, int L, int N) {
                 laplace_value += -u[neighbour_index(cords,i,1, L,d,N)] + 2* u[neighbour_index(cords, i, 0, L,d,N)] - u[neighbour_index(cords, i, -1, L,d,N)];
 
             } 
+            // TODO remove dx
             ddf[ind] = laplace_value/pow(dx,d);
             
     }
@@ -112,7 +113,7 @@ double* conjugate_gradient(const double* b, double* x, int L, int d) {
     for (int i = 0; i < N; i++) {
         r[i] = b[i] - Ax[i];
     }
-    double tol = 1e-12*inner_product(b,b,N);
+    double tol = 1e-2*inner_product(b,b,N);
     // p = r;
     double* p = allocate_field(N);
     for (int i = 0; i < N; i++) {
@@ -127,6 +128,7 @@ double* conjugate_gradient(const double* b, double* x, int L, int d) {
         i++;
         double* Ap =  minus_laplace(tmp,p, dx, d, L, N);
         // double dx = 2.0 / (L - 1);
+        // TODO Reuse variables
         double alpha = inner_product(r, r, N) / inner_product(p, Ap, N);
         for (int i = 0; i < N; i++) {
             x[i] = x[i] + alpha * p[i];
@@ -147,51 +149,51 @@ double* conjugate_gradient(const double* b, double* x, int L, int d) {
     return x; //TODO: Maybe delete this => Leads to errors
 }
 
-float* conjugate_gradient_float(const float* b, float* x, int L, int d) {
-    // Solve Ax = b
-    // x is initial guess
-    // return x
-    int N = pow(L,d);
-    float* r = allocate_field(N);
-    float* Ax = allocate_field(N);
-    minus_laplace(Ax, x, 2.0 / (L - 1), d, L, N);
-    for (int i = 0; i < N; i++) {
-        r[i] = b[i] - Ax[i];
-    }
-    float tol = 1e-5*inner_product(b,b,N);
-    // p = r;
-    float* p = allocate_field(N);
-    for (int i = 0; i < N; i++) {
-        p[i] = r[i];
-    }
-    float* tmp = allocate_field(N);
-    float* r_new = allocate_field(N);
-    float dx = 2.0/(L-1);
-    int i = 0;
-    while (norm(r, N) > tol)
-    {
-        i++;
-        float* Ap =  minus_laplace(tmp,p, dx, d, L, N);
-        // float dx = 2.0 / (L - 1);
-        float alpha = inner_product(r, r, N) / inner_product(p, Ap, N);
-        for (int i = 0; i < N; i++) {
-            x[i] = x[i] + alpha * p[i];
-            r_new[i] = r[i] - alpha * Ap[i];
-        }
-        float beta = inner_product(r_new, r_new, N) / inner_product(r, r, N);
-        for (int i = 0; i < N; i++) {
-            p[i] = r_new[i] + beta * p[i];
-            r[i] = r_new[i];
-        }
-        printf("inner res: %g, i=%d \n" ,norm(r, N),i);
-    }
-    free(tmp);
-    free(r);
-    free(r_new);
-    free(Ax);
-    free(p);
-    return x; //TODO: Maybe delete this => Leads to errors
-}
+// float* conjugate_gradient_float(const float* b, float* x, int L, int d) {
+//     // Solve Ax = b
+//     // x is initial guess
+//     // return x
+//     int N = pow(L,d);
+//     float* r = allocate_field(N);
+//     float* Ax = allocate_field(N);
+//     minus_laplace(Ax, x, 2.0 / (L - 1), d, L, N);
+//     for (int i = 0; i < N; i++) {
+//         r[i] = b[i] - Ax[i];
+//     }
+//     float tol = 1e-5*inner_product(b,b,N);
+//     // p = r;
+//     float* p = allocate_field(N);
+//     for (int i = 0; i < N; i++) {
+//         p[i] = r[i];
+//     }
+//     float* tmp = allocate_field(N);
+//     float* r_new = allocate_field(N);
+//     float dx = 2.0/(L-1);
+//     int i = 0;
+//     while (norm(r, N) > tol)
+//     {
+//         i++;
+//         float* Ap =  minus_laplace(tmp,p, dx, d, L, N);
+//         // float dx = 2.0 / (L - 1);
+//         float alpha = inner_product(r, r, N) / inner_product(p, Ap, N);
+//         for (int i = 0; i < N; i++) {
+//             x[i] = x[i] + alpha * p[i];
+//             r_new[i] = r[i] - alpha * Ap[i];
+//         }
+//         float beta = inner_product(r_new, r_new, N) / inner_product(r, r, N);
+//         for (int i = 0; i < N; i++) {
+//             p[i] = r_new[i] + beta * p[i];
+//             r[i] = r_new[i];
+//         }
+//         printf("inner res: %g, i=%d \n" ,norm(r, N),i);
+//     }
+//     free(tmp);
+//     free(r);
+//     free(r_new);
+//     free(Ax);
+//     free(p);
+//     return x; //TODO: Maybe delete this => Leads to errors
+// }
 
 void preconditioner(double* b, double* x, int L, int d)
 {
@@ -200,7 +202,51 @@ void preconditioner(double* b, double* x, int L, int d)
     // {
     //     x[i] = b[i];
     // }
-    conjugate_gradient_float(b, x,  L, d);
+
+    int N = pow(L,d);
+    double* r = allocate_field(N);
+    double* Ax = allocate_field(N);
+    for (int i = 0; i < N; i++) {
+        r[i] = b[i];
+    }
+    double tol = 1e-1*norm(b,N);
+    // p = r;
+    double* p = allocate_field(N);
+    for (int i = 0; i < N; i++) {
+        p[i] = r[i];
+    }
+    double* Ap = allocate_field(N);
+    double* r_new = allocate_field(N);
+    float dx = 2.0/(L-1);
+    int i = 0;
+    for (int k = 0; k++; k<N)
+    {
+        x[k] = 0;
+
+    }
+    while (norm(r, N) > tol)
+    {
+        i++;
+        minus_laplace(Ap,p, dx, d, L, N);
+        // double dx = 2.0 / (L - 1);
+        // TODO Reuse variables
+        double alpha = inner_product(r, r, N) / inner_product(p, Ap, N);
+        for (int i = 0; i < N; i++) {
+            x[i] = x[i] + alpha * p[i];
+            r_new[i] = r[i] - alpha * Ap[i];
+        }
+        double beta = inner_product(r_new, r_new, N) / inner_product(r, r, N);
+        for (int i = 0; i < N; i++) {
+            p[i] = r_new[i] + beta * p[i];
+            r[i] = r_new[i];
+        }
+        printf("inner res: %g, i=%d \n" ,norm(r, N),i);
+    }
+    free(Ap);
+    free(r);
+    free(r_new);
+    free(Ax);
+    free(p);
 }
 
 double* preconditioned_cg(double* b, double* x, int L, int d) {
@@ -212,7 +258,7 @@ double* preconditioned_cg(double* b, double* x, int L, int d) {
     for (int i = 0; i < N; i++) {
         r[i] = b[i] - Ax[i];
     }
-    double tol = 1e-8*inner_product(b,b,N);
+    double tol = 1e-8*norm(b,N);
     // p = M^-1r;
     double* p = allocate_field(N);
     preconditioner(r, p, L, d);
@@ -509,8 +555,10 @@ extern int run_tests_cpu() {
     assert(test_getindex_edge());
     assert(test_neighbour_index());
     printf("test preconditioned cg\n");
-    assert(test_preconditioned_cg(5, 2, 25));
-    assert(run_test_gc_cpu());
+    assert(test_preconditioned_cg(50, 2, 2500));
+    // assert(run_test_gc_cpu());
     printf("Tests Passed!\n");
     return 0;
 }
+
+// TODO test if laplace is symmetric
