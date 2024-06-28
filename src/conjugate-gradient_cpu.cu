@@ -205,6 +205,7 @@ void preconditioner(double* b, double* x, int L, int d)
 
 double* preconditioned_cg(double* b, double* x, int L, int d) {
     int N = pow(L,d);
+    assert(N > 0);
     double* r = allocate_field(N);
     double* Ax = allocate_field(N);
     minus_laplace(Ax, x, 2.0 / (L - 1), d, L, N);
@@ -215,12 +216,11 @@ double* preconditioned_cg(double* b, double* x, int L, int d) {
     // p = M^-1r;
     double* p = allocate_field(N);
     preconditioner(r, p, L, d);
-    double* r_new = allocate_field(N);
     float dx = 2.0/(L-1);
-    double* Minv_r_new = allocate_field(N);
-    double* tmp = allocate_field(N);
-    double* Minv_r = allocate_field(N);
-    double* Ap = allocate_field(N);
+    // TODO from here no more allocations are needed
+    double* Minv_r_new = Ax;
+    double* Minv_r = Ax;
+    double* Ap = Ax;
     double rMinvr;
     for (int i = 0; i < N; i++) {
         Minv_r[i] = p[i];
@@ -238,24 +238,23 @@ double* preconditioned_cg(double* b, double* x, int L, int d) {
         double alpha =  rMinvr / inner_product(p, Ap, N);
         for (int i = 0; i < N; i++) {
             x[i] = x[i] + alpha * p[i];
-            r_new[i] = r[i] - alpha * Ap[i];
+            r[i] = r[i] - alpha * Ap[i];
         }
-        printf("outer res: %g, i=%d \n" ,norm(r_new, N),i);
-        if (norm(r_new, N) < tol) break;
-        preconditioner(r_new, Minv_r_new, L, d);
-        r_newMinvr_new = inner_product(r_new, Minv_r_new, N);
+        printf("outer res: %g, i=%d \n" ,norm(r, N),i);
+        if (norm(r, N) < tol) break;
+        preconditioner(r, Minv_r_new, L, d);
+        r_newMinvr_new = inner_product(r, Minv_r_new, N);
         double beta = r_newMinvr_new / rMinvr;
         for (int i = 0; i < N; i++) {
             p[i] = Minv_r_new[i] + beta * p[i];
-            r[i] = r_new[i];
+            
         }
         rMinvr = r_newMinvr_new;
     }
-    free(Minv_r);
-    free(Minv_r_new);
-    free(r);
-    free(r_new);
     free(Ax);
+    // free(Minv_r);
+    // free(Minv_r_new);
+    free(r);
     free(p);
     return x;
 }
