@@ -227,13 +227,13 @@ double preconditioner(double* b, double* x, int L, int d, double errtol)
     double* r_new = allocate_field(N);
     float dx = 2.0/(L-1);
     int i = 0;
-    for (int k = 0; k++; k<N)
+    for (int k = 0; k<N; k++)
     {
         x[k] = 0;
 
     }
     double res = norm(r, N);
-
+    assert(x[0] == 0);
     while (res > tol)
     {
         i++;
@@ -252,6 +252,7 @@ double preconditioner(double* b, double* x, int L, int d, double errtol)
             r[i] = r_new[i];
         }
         res = norm(r, N);
+        printf("inner (b,x) = %g\n", inner_product(b,x,N));
         printf("inner res: %g, i=%d \n" ,res,i);
     }
     free(Ap);
@@ -337,7 +338,7 @@ bool every_a(double* x, double* y, int n)
     double tol = 1e-3;
     for (int i = 0; i < n; i++)
     {
-        if (x[i] - y[i] > tol || x[i] - y[i] < -tol) // floating point comparison
+        if (!(fabs(x[i] - y[i]) < tol)) // floating point comparison
         {
             return false;
         }
@@ -371,6 +372,38 @@ bool test_cg(int L, int d, int N) {
     }
     // apply conjugate gradient to calculate x
     x0 = conjugate_gradient(b, x0, L, d);
+    // compare with x
+    bool passed = false;
+    if (every_a(x, x0, N))
+    {
+        passed = true;
+    }
+    else
+    {
+        passed = false;
+    }
+    free(x);
+    free(b);
+    free(x0);
+    return passed;
+}
+
+bool test_preconditioner(int L, int d, int N) {
+    // allocate an array
+    double dx = 2.0 / (L - 1);
+    double* x = allocate_field(N);
+    double* b = allocate_field(N);
+    // fill it with random data
+    random_array(x, L, d, N);
+    // calculate b
+    b = minus_laplace(b, x, dx, d, L, N);
+    // initial guess
+    double* x0 = allocate_field(N);
+    for (int i = 0; i < N; i++) {
+        x0[i] = 0;
+    }
+    // apply conjugate gradient to calculate x
+    preconditioner(b, x0, L, d, 1e-6);
     // compare with x
     bool passed = false;
     if (every_a(x, x0, N))
@@ -577,9 +610,10 @@ extern int run_tests_cpu() {
     assert(test_getindex_edge2());
     assert(test_getindex_edge());
     assert(test_neighbour_index());
+    assert(run_test_gc_cpu());
+    assert(test_preconditioner(50,2,2500));
     printf("test preconditioned cg\n");
     assert(test_preconditioned_cg(50, 2, 2500));
-    // assert(run_test_gc_cpu());
     printf("Tests Passed!\n");
     return 0;
 }
