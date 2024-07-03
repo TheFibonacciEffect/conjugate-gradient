@@ -213,7 +213,6 @@ double preconditioner(double* b, double* x, int L, int d, double errtol)
 
     int N = pow(L,d);
     double* r = allocate_field(N);
-    double* Ax = allocate_field(N);
     for (int i = 0; i < N; i++) {
         r[i] = b[i];
     }
@@ -224,7 +223,6 @@ double preconditioner(double* b, double* x, int L, int d, double errtol)
         p[i] = r[i];
     }
     double* Ap = allocate_field(N);
-    double* r_new = allocate_field(N);
     float dx = 2.0/(L-1);
     int i = 0;
     for (int k = 0; k<N; k++)
@@ -244,12 +242,11 @@ double preconditioner(double* b, double* x, int L, int d, double errtol)
         double alpha = rr / inner_product(p, Ap, N);
         for (int i = 0; i < N; i++) {
             x[i] = x[i] + alpha * p[i];
-            r_new[i] = r[i] - alpha * Ap[i];
+            r[i] = r[i] - alpha * Ap[i];
         }
-        double beta = inner_product(r_new, r_new, N) / rr;
+        double beta = inner_product(r, r, N) / rr;
         for (int i = 0; i < N; i++) {
-            p[i] = r_new[i] + beta * p[i];
-            r[i] = r_new[i];
+            p[i] = r[i] + beta * p[i];
         }
         res = norm(r, N);
         printf("inner (b,x) = %g\n", inner_product(b,x,N));
@@ -257,8 +254,6 @@ double preconditioner(double* b, double* x, int L, int d, double errtol)
     }
     free(Ap);
     free(r);
-    free(r_new);
-    free(Ax);
     free(p);
     return res;
 }
@@ -277,7 +272,6 @@ double* preconditioned_cg(double* b, double* x, int L, int d) {
     double* p = allocate_field(N);
     preconditioner(r, p, L, d, 1e-2);
     float dx = 2.0/(L-1);
-    // TODO from here no more allocations are needed
     double* Minv_r_new = Ax;
     double* Minv_r = Ax;
     double* Ap = Ax;
