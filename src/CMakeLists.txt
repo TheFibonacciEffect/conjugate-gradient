@@ -12,7 +12,7 @@ project(IterativeSolvers C CXX CUDA)
 # Pass options to NVCC and GCC
 # set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3 -Xcompiler -rdynamic -lineinfo")
 
-set(src common.h ./conjugate-gradient_cpu.h conjugate-gradient_cpu.cu)
+set(src common.h ./conjugate-gradient_cpu.h conjugate-gradient_cpu.cu preconditioner_gpu.h preconditioner_gpu.cu)
 
 add_executable(IterativeSolvers main.cu ${src})
 set_property(TARGET IterativeSolvers PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS}")
