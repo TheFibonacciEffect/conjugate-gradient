@@ -7,6 +7,8 @@
 #define TYPE float
 // #include <stdlib.h>
 // #include <float.h>
+
+// copied to main.cu
 __global__ void sum(int* g_idata, int* g_odata)
 {
    __shared__ int sdata[NTHREADS]; //why do I not need to reserve this?
@@ -30,6 +32,7 @@ __global__ void sum(int* g_idata, int* g_odata)
    if (tid == 0) g_odata[blockIdx.x] = sdata[0];
 }
 
+// Copied to main.cu
 __global__ void inner_product(TYPE *result, TYPE *a, TYPE *b, int n, int arretmetic)
 {
    assert(blockDim.x*gridDim.x > n);
