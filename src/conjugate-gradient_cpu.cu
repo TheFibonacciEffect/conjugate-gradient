@@ -110,16 +110,15 @@ double* allocate_field(int N)
     return r;
 }
 
-double* conjugate_gradient(const double* b, double* x, int L, int d) {
-    // Solve Ax = b
+void conjugate_gradient(const double* b, double* x, int L, int d) {
+    // Solve Ax = b with tolerance 1e-6
     // x is initial guess
-    // return x
+    // x is overwritten
     int N = pow(L,d);
     double* r = allocate_field(N);
-    double* Ax = allocate_field(N);
-    minus_laplace(Ax, x, 2.0 / (L - 1), d, L, N);
+    minus_laplace(x, x, 2.0 / (L - 1), d, L, N);
     for (int i = 0; i < N; i++) {
-        r[i] = b[i] - Ax[i];
+        r[i] = b[i] - x[i];
     }
     double tol = 1e-6*norm(b,N);
     // p = r;
@@ -127,82 +126,34 @@ double* conjugate_gradient(const double* b, double* x, int L, int d) {
     for (int i = 0; i < N; i++) {
         p[i] = r[i];
     }
-    double* tmp = allocate_field(N);
-    double* r_new = allocate_field(N);
+    double* Ap = allocate_field(N);
     float dx = 2.0/(L-1);
     int i = 0;
+    double rr = nan;
     while (norm(r, N) > tol)
     {
         i++;
-        double* Ap =  minus_laplace(tmp,p, dx, d, L, N);
+        minus_laplace(Ap,p, dx, d, L, N);
         // double dx = 2.0 / (L - 1);
         // TODO Reuse variables
-        double alpha = inner_product(r, r, N) / inner_product(p, Ap, N);
+        rr = inner_product(r,r,N);
+        double alpha = rr / inner_product(p, Ap, N);
         for (int i = 0; i < N; i++) {
             x[i] = x[i] + alpha * p[i];
-            r_new[i] = r[i] - alpha * Ap[i];
+            r[i] = r[i] - alpha * Ap[i];
         }
-        double beta = inner_product(r_new, r_new, N) / inner_product(r, r, N);
+        double rr_new = inner_product(r, r, N)
+        double beta = rr_new / rr;
         for (int i = 0; i < N; i++) {
-            p[i] = r_new[i] + beta * p[i];
-            r[i] = r_new[i];
+            p[i] = r[i] + beta * p[i];
         }
-        printf("inner res: %g, i=%d \n" ,norm(r, N),i);
+        rr = rr_new;
     }
-    free(tmp);
+    free(Ap);
     free(r);
-    free(r_new);
-    free(Ax);
     free(p);
-    return x; //TODO: Maybe delete this => Leads to errors
 }
-
-// float* conjugate_gradient_float(const float* b, float* x, int L, int d) {
-//     // Solve Ax = b
-//     // x is initial guess
-//     // return x
-//     int N = pow(L,d);
-//     float* r = allocate_field(N);
-//     float* Ax = allocate_field(N);
-//     minus_laplace(Ax, x, 2.0 / (L - 1), d, L, N);
-//     for (int i = 0; i < N; i++) {
-//         r[i] = b[i] - Ax[i];
-//     }
-//     float tol = 1e-5*inner_product(b,b,N);
-//     // p = r;
-//     float* p = allocate_field(N);
-//     for (int i = 0; i < N; i++) {
-//         p[i] = r[i];
-//     }
-//     float* tmp = allocate_field(N);
-//     float* r_new = allocate_field(N);
-//     float dx = 2.0/(L-1);
-//     int i = 0;
-//     while (norm(r, N) > tol)
-//     {
-//         i++;
-//         float* Ap =  minus_laplace(tmp,p, dx, d, L, N);
-//         // float dx = 2.0 / (L - 1);
-//         float alpha = inner_product(r, r, N) / inner_product(p, Ap, N);
-//         for (int i = 0; i < N; i++) {
-//             x[i] = x[i] + alpha * p[i];
-//             r_new[i] = r[i] - alpha * Ap[i];
-//         }
-//         float beta = inner_product(r_new, r_new, N) / inner_product(r, r, N);
-//         for (int i = 0; i < N; i++) {
-//             p[i] = r_new[i] + beta * p[i];
-//             r[i] = r_new[i];
-//         }
-//         printf("inner res: %g, i=%d \n" ,norm(r, N),i);
-//     }
-//     free(tmp);
-//     free(r);
-//     free(r_new);
-//     free(Ax);
-//     free(p);
-//     return x; //TODO: Maybe delete this => Leads to errors
-// }
-
+// TODO Use Floats
 double preconditioner(double* b, double* x, int L, int d, double errtol)
 {
     // For testing
@@ -232,19 +183,22 @@ double preconditioner(double* b, double* x, int L, int d, double errtol)
     }
     double res = norm(r, N);
     assert(x[0] == 0);
+    double rr = nan;
     while (res > tol)
     {
         i++;
         minus_laplace(Ap,p, dx, d, L, N);
         // double dx = 2.0 / (L - 1);
         // TODO Reuse variables
-        double rr = inner_product(r,r,N);
+        rr = inner_product(r,r,N);
         double alpha = rr / inner_product(p, Ap, N);
         for (int i = 0; i < N; i++) {
             x[i] = x[i] + alpha * p[i];
             r[i] = r[i] - alpha * Ap[i];
         }
-        double beta = inner_product(r, r, N) / rr;
+        double rr_new = inner_product(r, r, N);
+        double beta = rr_new / rr;
+        rr = rr_new;
         for (int i = 0; i < N; i++) {
             p[i] = r[i] + beta * p[i];
         }
@@ -319,7 +273,7 @@ bool every_f(double* x, double y, int n)
     double tol = 1e-3;
     for (int i = 0; i < n; i++)
     {
-        if (x[i] - y > tol || x[i] - y < -tol) // floating point comparison
+        if (!(fabs(x[i] - y[i]) < tol)) // floating point comparison
         {
             return false;
         }
@@ -332,7 +286,7 @@ bool every_a(double* x, double* y, int n)
     double tol = 1e-3;
     for (int i = 0; i < n; i++)
     {
-        if (!(fabs(x[i] - y[i]) < tol)) // floating point comparison
+        if (!(fabs(x[i] - y[i]) < tol)) // floating point comparison also accounting for NaNs that always return false
         {
             return false;
         }
