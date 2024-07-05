@@ -34,7 +34,8 @@ int main()
     //     printf("%f\n",x_cpu[i]);
     // }
 
-    preconditioner_gpu(b,x,L,d,1e-3);
+    // TODO Undefined reference
+    // preconditioner_gpu(b,x,L,d,1e-3);
     gpuErrchk( cudaPeekAtLastError() );
     gpuErrchk( cudaDeviceSynchronize() );
 }
