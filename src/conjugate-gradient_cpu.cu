@@ -110,6 +110,18 @@ double* allocate_field(int N)
     return r;
 }
 
+float* allocate_field_float(int N)
+{
+    float* r = (float *) calloc(N+1,sizeof(float));
+    if (r == NULL)
+    {
+        printf("Memory allocation failed");
+        exit(1);
+    }
+    r[N] = 0;
+    return r;
+}
+
 double* conjugate_gradient(const double* b, double* x, int L, int d) {
     // Solve Ax = b
     // x is initial guess
