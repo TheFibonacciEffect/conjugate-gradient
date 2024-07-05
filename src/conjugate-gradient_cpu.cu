@@ -249,9 +249,10 @@ double preconditioner(double* b, double* x, int L, int d, double errtol)
             p[i] = r[i] + beta * p[i];
         }
         res = norm(r, N);
-        printf("inner (b,x) = %g\n", inner_product(b,x,N));
-        printf("inner res: %g, i=%d \n" ,res,i);
+        // printf("inner (b,x) = %g\n", inner_product(b,x,N));
+        // printf("inner res: %g, i=%d \n" ,res,i);
     }
+    printf("number of steps inner %d\n",i);
     free(Ap);
     free(r);
     free(p);
@@ -270,7 +271,7 @@ double* preconditioned_cg(double* b, double* x, int L, int d) {
     double tol = 1e-8*norm(b,N);
     // p = M^-1r;
     double* p = allocate_field(N);
-    preconditioner(r, p, L, d, 1e-2);
+    preconditioner(r, p, L, d, 1e-3);
     float dx = 2.0/(L-1);
     double* Minv_r_new = Ax;
     double* Minv_r = Ax;
@@ -288,14 +289,14 @@ double* preconditioned_cg(double* b, double* x, int L, int d) {
         i++;
         minus_laplace(Ap,p, dx, d, L, N);
         double alpha =  rMinvr / inner_product(p, Ap, N); // two extremly large numbers => becomes extremly small (~ 1e-32) => slow convergence
-        printf("rMinvr = %g, pAp = %g\n", rMinvr , inner_product(p, Ap, N));
+        // printf("rMinvr = %g, pAp = %g\n", rMinvr , inner_product(p, Ap, N));
         for (int i = 0; i < N; i++) {
             x[i] = x[i] + alpha * p[i];
             r[i] = r[i] - alpha * Ap[i];
         }
-        printf("outer res: %g, i=%d \n" ,norm(r, N),i);
+        // printf("outer res: %g, i=%d \n" ,norm(r, N),i);
         if (norm(r, N) < tol) break;
-        preconditioner(r, Minv_r_new, L, d, 1e-2);
+        preconditioner(r, Minv_r_new, L, d, 1e-3);
         r_newMinvr_new = inner_product(r, Minv_r_new, N);
         double beta = r_newMinvr_new / rMinvr;
         for (int i = 0; i < N; i++) {
@@ -304,6 +305,7 @@ double* preconditioned_cg(double* b, double* x, int L, int d) {
         }
         rMinvr = r_newMinvr_new;
     }
+    printf("number of steps (outer) %i\n",i);
     free(Ax);
     // free(Minv_r);
     // free(Minv_r_new);

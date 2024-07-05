@@ -36,10 +36,16 @@ __device__ __host__ double f(int x)
     return 1;
 }
 
+// __host__ float* cuda_allocate_field(int N) {
+//     float * field;
+//     CHECK(cudaMallocManaged(&field, (N+1)*sizeof(float)));
+//     field[N] = 0;
+//     return field;
+// }
 
 # endif
 
-
+// TODO: Think about what to do with this
 
 __global__ void FUNCTION(apply_function_gpu)(TYPE * result, int N, int L, int d) {
     int ind = blockIdx.x * blockDim.x + threadIdx.x;

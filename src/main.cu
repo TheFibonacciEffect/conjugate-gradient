@@ -11,15 +11,12 @@
 
 #define dmax 5  // Dimension
 
-#define TYPE double
-#define FUNCTION(NAME) NAME ## _d
-#include "laplace-x.h"
-#undef TYPE
-// #define TYPE float
+#include "laplace-d.h"
+#define TYPE float
 // #include "laplace-x.h"
 
 #include "conjugate-gradient_cpu.h"
-
+#include "preconditioner_gpu.h"
 int main()
 {
     run_tests_cpu();
@@ -36,6 +33,8 @@ int main()
     // {
     //     printf("%f\n",x_cpu[i]);
     // }
+
+    preconditioner_gpu(b,x,L,d,1e-3);
     gpuErrchk( cudaPeekAtLastError() );
     gpuErrchk( cudaDeviceSynchronize() );
 }
