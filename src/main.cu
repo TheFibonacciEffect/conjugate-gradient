@@ -45,6 +45,12 @@ __device__ int* index_to_cords_cu(int*cords, int index, int L, int d) {
 }
 
 
+__global__ void ones(float* x)
+{
+    int ind = blockIdx.x * blockDim.x + threadIdx.x;
+    x[ind] = 1;
+}
+
 # define TYPE float
 #define FUNCTION(NAME) NAME ## _f
 # define dmax 5
@@ -104,22 +110,101 @@ __global__ void FUNCTION(minus_laplace_gpu_)(TYPE * ddf, TYPE * u, TYPE dx, int 
 // }
 
 
-__global__ void inner_product(TYPE *result, TYPE *a, TYPE *b, int n, int arretmetic_complexity)
+__global__ static void reduceAdd (double *g_idata, double *g_odata, unsigned int n)
 {
-   assert(blockDim.x*gridDim.x > n);
-   int * sdata = new int[blockDim.x];
-   unsigned int tid = threadIdx.x;
-   unsigned int i = blockIdx.x * blockDim.x + arretmetic_complexity*threadIdx.x;
+    // set thread ID
+    unsigned int tid = threadIdx.x;
+    unsigned int gridSize = blockDim.x*2*gridDim.x;
+    unsigned int idx = blockIdx.x * blockDim.x * 2 + threadIdx.x;
 
-   if (i > n) return;
-   for (int j = 0; j < arretmetic_complexity && i+j < n; j++)
-   {
-      result[tid] += a[i+j] * b[i+j];
-   }
+    // add as many as possible (= 2*(n/gridSize))
+    double sum=0.0;
+    int i=idx;
+    while (i<n)
+    {
+        sum += g_idata[i] + g_idata[i+blockDim.x];
+        i += gridSize;
+    }
+    g_idata[idx] = sum;
 
-   return;
+    __syncthreads();
+
+    // in-place reduction in global memory
+    for (int stride = blockDim.x / 2; stride > 0; stride /= 2)
+    {
+        if (tid < stride)
+        {
+            g_idata[idx] += g_idata[idx + stride];
+        }
+
+        // synchronize within threadblock
+        __syncthreads();
+    }
+
+    // write result for this block to global mem
+    if (tid == 0) g_odata[blockIdx.x] = g_idata[idx];
 }
 
+// TODO write and test this
+__global__ void inner_product_1(float *a, const float *b, float * tmp, int n, int arretmetic_complexity)
+{
+    assert(blockDim.x * gridDim.x > n);
+    extern __shared__ float array[];
+    unsigned int tid = threadIdx.x;
+    unsigned int i = blockIdx.x * blockDim.x + arretmetic_complexity * threadIdx.x;
+    if (i > n)
+        return;
+    float result = 0;
+    for (int j = 0; j < arretmetic_complexity && i + j < n; j++)
+    {
+        result += a[i + j] * b[i + j];
+    }
+    a[i] = result;
+    __syncthreads();
+
+    // something like this
+    /*     // in-place reduction in global memory
+    for (int stride = blockDim.x / 2; stride > 0; stride /= 2)
+    {
+        if (tid < stride)
+        {
+            g_idata[idx] += g_idata[idx + stride];
+        }
+
+        // synchronize within threadblock
+        __syncthreads();
+    }
+
+    // write result for this block to global mem
+    if (tid == 0) g_tmp[blockIdx.x] = g_idata[idx]; */
+
+    // TODO
+    // if (tid == 0)
+    // {
+    //     tmp[blockIdx.x] = 
+    // }
+    return;
+}
+
+__global__ void inner_product_2(float* a, const float* odata, int N)
+{
+    // // do the rest of the reduction
+    // a[N] = result;
+}
+
+
+float inner_product(float* a, float* b, int N)
+{
+    // // tmp array
+    // int nthread = 32;
+    // assert(N % nthread == 0);
+    // inner_product_1<<N/nthread, nthread>>(a,b,tmp,N,5);
+    // gpuErrchk( cudaDeviceSynchronize() );
+    // inner_product_2
+    // gpuErrchk( cudaDeviceSynchronize() );
+    // gpuErrchk( cudaPeekAtLastError() );
+    // free(tmp);
+}
 
 __global__ void FUNCTION(print_array)(TYPE * array, int N) {
     int ind = blockIdx.x * blockDim.x + threadIdx.x;
@@ -127,13 +212,6 @@ __global__ void FUNCTION(print_array)(TYPE * array, int N) {
         printf("%f ", array[ind]);
         ind += blockDim.x * gridDim.x;
     }
-}
-
-__global__ void norm_gpu(int N)
-{
-    assert(blockDim.x * gridDim.x == N);
-    int ind = blockIdx.x * blockDim.x + threadIdx.x;
-
 }
 
 void preconditioner_gpu(float* b, float* x, int L, int d, float errtol)
@@ -152,11 +230,14 @@ void preconditioner_gpu(float* b, float* x, int L, int d, float errtol)
 int main()
 {
     run_tests_cpu();
-    int L = 5;
-    int d = 3;
-    int N = (int)pow(L,d);
+    constexpr int L = 5;
+    constexpr int d = 4;
+    constexpr int N = 625;
     float* b = cuda_allocate_field_f(N);
     float* x = cuda_allocate_field_f(N);
+    ones<<<N,256>>>(b);
+    // TODO
+    // inner_product(b,b, working_memory,N,2);
 
     preconditioner_gpu(b,x,L,d,1e-3);
     gpuErrchk( cudaPeekAtLastError() );
