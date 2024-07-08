@@ -10,33 +10,22 @@ namespace Detail {
 
   using index_t = unsigned int;
 
+  constexpr unsigned int generate_mask(int d)
+{
+    unsigned int m = 0;
+    for (int i=0; i<32; i+=d)
+    {
+        m = m << d;
+        m++;
+    }
+    return m;
+}
+
   template<int Dim>
-  struct mask_gen {};
-
-  template<>
-  struct mask_gen<2> {
-	static constexpr unsigned int value = 0x55555555;
+  struct mask_gen {
+    static constexpr index_t value = generate_mask(Dim);
   };
 
-  template<>
-  struct mask_gen<3> {
-	static constexpr unsigned int value = 0x24924924;
-  };
-
-  template<>
-  struct mask_gen<4> {
-	static constexpr unsigned int value = 0x44444444;
-  };
-
-  template<>
-  struct mask_gen<5> {
-	static constexpr unsigned int value = 0x21084210;
-  };
-
-  template<>
-  struct mask_gen<6> {
-	static constexpr unsigned int value = 0x20820820;
-  };
 
   template<int N>
   __host__ __device__ static inline constexpr index_t generate_mask(int dim) {
