@@ -19,6 +19,10 @@ set(src common.h ./conjugate-gradient_cpu.h conjugate-gradient_cpu.cu preconditi
 add_executable(IterativeSolvers main.cu ${src})
 target_link_libraries(IterativeSolvers pdep_custom)
 set_property(TARGET IterativeSolvers PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS}")
+
+# create shared libraries for julia
+add_library(conjugate_gradient SHARED conjugate-gradient_cpu.cu)
+add_library(conjugate_gradient_gpu SHARED main.cu)
 # set_target_properties(IterativeSolvers PROPERTIES LINKER_LANGUAGE CXX)
 
 
