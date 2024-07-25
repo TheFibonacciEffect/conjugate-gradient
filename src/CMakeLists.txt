@@ -22,7 +22,7 @@ set_property(TARGET IterativeSolvers PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS}")
 
 # create shared libraries for julia
 add_library(conjugate_gradient SHARED conjugate-gradient_cpu.cu)
-add_library(conjugate_gradient_gpu SHARED main.cu)
+add_library(conjugate_gradient_gpu SHARED main.cu ${src})
 # set_target_properties(IterativeSolvers PROPERTIES LINKER_LANGUAGE CXX)
 
 

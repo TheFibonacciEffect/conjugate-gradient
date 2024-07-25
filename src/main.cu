@@ -107,7 +107,7 @@ __global__ void FUNCTION(minus_laplace_gpu_)(TYPE *ddf, TYPE *u, TYPE dx, int d,
 //    if (tid == 0) g_odata[blockIdx.x] = sdata[0];
 // }
 
-__global__ static void reduceAdd(double *g_idata, double *g_odata,
+__global__ static void reduceAdd(float *g_idata, float *g_odata,
                                  unsigned int n) {
   // set thread ID
   unsigned int tid = threadIdx.x;
@@ -115,7 +115,7 @@ __global__ static void reduceAdd(double *g_idata, double *g_odata,
   unsigned int idx = blockIdx.x * blockDim.x * 2 + threadIdx.x;
 
   // add as many as possible (= 2*(n/gridSize))
-  double sum = 0.0;
+  float sum = 0.0;
   int i = idx;
   while (i < n) {
     sum += g_idata[i] + g_idata[i + blockDim.x];
@@ -141,7 +141,7 @@ __global__ static void reduceAdd(double *g_idata, double *g_odata,
 }
 
 // TODO write and test this
-__global__ void inner_product_1(float *a, const float *b, float *tmp, int n,
+__global__ void inner_product_1(float *a, const float *b, float *tmp, const int n,
                                 int arretmetic_complexity) {
   assert(blockDim.x * gridDim.x > n);
   extern __shared__ float array[];
@@ -174,29 +174,47 @@ __global__ void inner_product_1(float *a, const float *b, float *tmp, int n,
   if (tid == 0) g_tmp[blockIdx.x] = g_idata[idx]; */
 
   // TODO
-  // if (tid == 0)
-  // {
-  //     tmp[blockIdx.x] =
-  // }
+  if (tid == 0)
+  {
+      for (int j = 0; j < n; j += arretmetic_complexity)
+      {
+        tmp[blockIdx.x] += a[j];
+      }
+  }
   return;
 }
 
-__global__ void inner_product_2(float *a, const float *odata, int N) {
+__global__ void sum(float *tmp, int N) {
   // // do the rest of the reduction
-  // a[N] = result;
+  assert(gridDim.x == 1);
+  // todo
+
 }
 
 float inner_product(float *a, float *b, int N) {
+
+  constexpr int nthread = 224;
+  int nblocks = N/nthread;
+  assert(N % (nthread) == 0);
   // // tmp array
-  // int nthread = 32;
-  // assert(N % nthread == 0);
-  // inner_product_1<<N/nthread, nthread>>(a,b,tmp,N,5);
-  // gpuErrchk( cudaDeviceSynchronize() );
-  // inner_product_2
+  float * tmp;
+  CHECK(cudaMalloc(&tmp, nblocks*sizeof(float)));
+
+  inner_product_1<<<N/nthread, nthread>>>(a,b,tmp,N,5);
+  gpuErrchk( cudaDeviceSynchronize() );
+  sum<<<1, nblocks>>>(tmp,nblocks);
   // gpuErrchk( cudaDeviceSynchronize() );
   // gpuErrchk( cudaPeekAtLastError() );
   // free(tmp);
 }
+
+__global__ void printArray_gpu(float* d_array, int size) {
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if (idx < size) {
+        printf("Array[%d] = %d\n", idx, d_array[idx]);
+    }
+}
+
 
 __global__ void FUNCTION(print_array)(TYPE *array, int N) {
   int ind = blockIdx.x * blockDim.x + threadIdx.x;
@@ -248,19 +266,38 @@ int tests_interleaved_index() {
   return 0;
 }
 
+
 int main() {
   run_tests_cpu();
-  constexpr int L = 5;
-  constexpr int d = 4;
-  constexpr int N = 625;
+  int L = 5;
+  int d = 4;
+  int N = 32;
   float *b = cuda_allocate_field_f(N);
   float *x = cuda_allocate_field_f(N);
   ones<<<N, 256>>>(b);
-  tests_interleaved_index();
+  float * tmp;
+  CHECK(cudaMalloc(&tmp, sizeof(float)));
+  reduceAdd<<<1,N>>>(b, tmp, N);
+  gpuErrchk(cudaDeviceSynchronize());
+  float res = NAN;
+  cudaMemcpy(&res, tmp, sizeof(float), cudaMemcpyDeviceToHost);
+  printf("res = %f\n", res);
+  // int threadsPerBlock = 256;
+  // int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
+  // printArray_gpu<<<blocksPerGrid, threadsPerBlock>>>(tmp, N);
+  
+  // tests_interleaved_index();
   // TODO
   // inner_product(b,b, working_memory,N,2);
   // minus_laplace_gpu_d<d,L,N><<<N,265>>>(ddf,u,dx);
-  preconditioner_gpu(b, x, L, d, 1e-3);
+  // preconditioner_gpu(b, x, L, d, 1e-3);
   gpuErrchk(cudaPeekAtLastError());
   gpuErrchk(cudaDeviceSynchronize());
 }
+
+extern "C" {
+  void call_main() {
+    main();
+  }
+}
+
