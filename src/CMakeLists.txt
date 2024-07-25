@@ -16,9 +16,9 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3 -Xcompiler -rdynamic -lineinfo -Xp
 
 set(src common.h ./conjugate-gradient_cpu.h conjugate-gradient_cpu.cu preconditioner_gpu.h preconditioner_gpu.cu)
 
-add_executable(IterativeSolvers main.cu ${src})
-target_link_libraries(IterativeSolvers pdep_custom)
-set_property(TARGET IterativeSolvers PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS}")
+# add_executable(IterativeSolvers main.cu ${src})
+# target_link_libraries(IterativeSolvers pdep_custom)
+# set_property(TARGET IterativeSolvers PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS}")
 
 # create shared libraries for julia
 add_library(conjugate_gradient SHARED conjugate-gradient_cpu.cu)
