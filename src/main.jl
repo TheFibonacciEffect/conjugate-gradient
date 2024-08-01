@@ -22,6 +22,13 @@ function laplace_gpu_jl(ddf::CuArray{Float32}, u::CuArray{Float32}, dx::Cfloat, 
     @ccall $sym(get_ptr(ddf)::CuPtr{Cfloat}, get_ptr(u)::CuPtr{Cfloat}, dx::Cfloat, d::Cint, L::Cint, N::Cint, index_mode::Cuint, blocks::Cuint, threads::Cuint)::Cvoid
 end
 
+# Define a wrapper for the `inner_product_gpu` function
+function inner_product_gpu(v::CuArray{Float64}, w::CuArray{Float64}, N::Cuint)
+    sym = Libdl.dlsym(lib, :inner_product_gpu)
+    result = Ref{Cdouble}()
+    @ccall $sym(get_ptr(v)::CuPtr{Cdouble}, get_ptr(w)::CuPtr{Cdouble}, N::Cuint)::Cdouble
+end
+
 # Example usage
 N = 10
 A = CUDA.fill(1.0f0, N)
@@ -33,6 +40,7 @@ add_jl(A, B, 9, 1)
 # Verify the result
 println(A)
 
+# TODO Fix this
 N = 1000*124
 res = CUDA.fill(NaN32,N)
 B = range(-1f0pi,1f0pi,N) .|> sin

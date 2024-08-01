@@ -74,3 +74,61 @@ __global__ void laplace_gpu(float *ddf, float *u, int d,
     // ddf[ind] = laplace_value / pow(dx, d);
   }
 }
+
+__global__ void reduceMulAddComplete(double *v, double *w, double *g_odata,
+                                            unsigned int n, unsigned int nthreads)
+{
+  // set thread ID
+  unsigned int tid = threadIdx.x;
+  unsigned int gridSize = blockDim.x * 2 * gridDim.x;
+  unsigned int idx = blockIdx.x * blockDim.x * 2 + threadIdx.x;
+
+  __shared__ double tmp[nthreads];
+
+  // unroll as many as possible
+  double sum = 0.0;
+  int i = idx;
+  while (i < n)
+  {
+    sum += v[i]* w[i] + v[i + blockDim.x]* w[i + blockDim.x];
+    i += gridSize;
+  }
+  // g_idata[idx] = sum;
+  tmp[tid] = sum;
+
+  __syncthreads();
+
+  // in-place reduction in shared memory
+  for (int stride = blockDim.x / 2; stride > 0; stride /= 2)
+  {
+    if (tid < stride)
+    {
+      tmp[tid] += tmp[tid + stride];
+    }
+
+    // synchronize within threadblock
+    __syncthreads();
+  }
+
+  // atomicAdd result of all blocks to global mem
+  if (tid == 0)
+    atomicAdd(g_odata, tmp[0]);
+}
+
+extern "C" double inner_product_gpu(double *v, double *w, unsigned int N)
+{
+  double *bs, r;
+  int nthreads = 265;
+  int nblocks = N/nthreads +1;
+
+  // bs is only size 1 not size nblocks?
+  CHECK(cudaMalloc((void **)&bs, sizeof(double))); 
+
+  reduceMulAddComplete<<<nblocks, nthreads>>>(v, w, bs, N, nthreads);
+  CHECK(cudaDeviceSynchronize());
+  CHECK(cudaMemcpy(&r, bs, sizeof(double), cudaMemcpyDeviceToHost));
+
+  CHECK(cudaFree(bs));
+
+  return r;
+}
