@@ -40,7 +40,7 @@ add_jl(A, B, 9, 1)
 # Verify the result
 println(A)
 
-# TODO Fix this
+# TODO Fix Segfault in laplace operator
 N = 1000*124
 res = CUDA.fill(NaN32,N)
 B = range(-1f0pi,1f0pi,N) .|> sin
