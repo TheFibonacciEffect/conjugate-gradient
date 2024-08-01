@@ -139,7 +139,8 @@ __device__ double norm(const double *v, const int N)
 }
 
 // TODO still work in progress
-extern "C" double conjugate_gradient_gpu(const double * b, double * x , const int L, const int d)
+// initial guess is 0
+/* extern "C" double conjugate_gradient_gpu(const double * b, double * x , const int L, const int d)
 {
   int nthreads = 265;
   int N = pow(L, d);
@@ -164,6 +165,6 @@ extern "C" double conjugate_gradient_gpu(const double * b, double * x , const in
     printf("residue: %f\n", residue);
   }
   return residue;
-}
+} */
   
   
