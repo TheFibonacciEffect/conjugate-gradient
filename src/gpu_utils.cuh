@@ -132,3 +132,38 @@ extern "C" double inner_product_gpu(double *v, double *w, unsigned int N)
 
   return r;
 }
+
+__device__ double norm(const double *v, const int N)
+{
+  return sqrt(inner_product_gpu(v, v, N));
+}
+
+// TODO still work in progress
+extern "C" double conjugate_gradient_gpu(const double * b, double * x , const int L, const int d)
+{
+  int nthreads = 265;
+  int N = pow(L, d);
+  assert(N > nthreads);
+  int nblocks = N/nthreads +1;
+  double *r = cuda_allocate_field(N);
+
+  while (residue > tol)
+  {
+    i++;
+    laplace_gpu<<<nblocks, nthreads>>>(Ap, p, d, L, N, 0);
+    CHECK(cudaDeviceSynchronize());
+    alpha = rr / inner_product_gpu(p, Ap, N);
+    muladd<<<nblocks, nthreads>>>(x, alpha, p, N);
+    muladd<<<nblocks, nthreads>>>(r, -alpha, Ap, N);
+    CHECK(cudaDeviceSynchronize());
+    rr_new = inner_product_gpu(r, r, N);
+    beta = rr_new / rr;
+    muladd<<<nblocks, nthreads>>>(p, beta, p, N);
+    CHECK(cudaDeviceSynchronize());
+    rr = rr_new;
+    printf("residue: %f\n", residue);
+  }
+  return residue;
+}
+  
+  
