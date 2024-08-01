@@ -75,7 +75,7 @@ __global__ void laplace_gpu(float *ddf, float *u, int d,
   }
 }
 
-__global__ void reduceMulAddComplete(double *v, double *w, double *g_odata,
+__global__ void reduceMulAddComplete(float *v, float *w, float *g_odata,
                                             unsigned int n,const unsigned int nthreads)
 {
   // set thread ID
@@ -83,10 +83,10 @@ __global__ void reduceMulAddComplete(double *v, double *w, double *g_odata,
   unsigned int gridSize = blockDim.x * 2 * gridDim.x;
   unsigned int idx = blockIdx.x * blockDim.x * 2 + threadIdx.x;
 
-  extern __shared__ double tmp[]; // shared memory can be given as 3rd argument to allocate it dynamicially
+  extern __shared__ float tmp[]; // shared memory can be given as 3rd argument to allocate it dynamicially
 
   // unroll as many as possible
-  double sum = 0.0;
+  float sum = 0.0;
   int i = idx;
   while (i < n)
   {
@@ -115,40 +115,41 @@ __global__ void reduceMulAddComplete(double *v, double *w, double *g_odata,
     atomicAdd(g_odata, tmp[0]);
 }
 
-extern "C" double inner_product_gpu(double *v, double *w, unsigned int N)
+extern "C" float inner_product_gpu(float *v, float *w, unsigned int N)
 {
-  double *bs, r;
+  float *bs, r;
   const int nthreads = 265;
   int nblocks = N/nthreads +1;
 
   // bs is only size 1 not size nblocks?
-  CHECK(cudaMalloc((void **)&bs, sizeof(double))); 
+  CHECK(cudaMalloc((void **)&bs, sizeof(float))); 
 
   reduceMulAddComplete<<<nblocks, nthreads, nthreads*sizeof(float)>>>(v, w, bs, N, nthreads);
   CHECK(cudaDeviceSynchronize());
-  CHECK(cudaMemcpy(&r, bs, sizeof(double), cudaMemcpyDeviceToHost));
+  CHECK(cudaMemcpy(&r, bs, sizeof(float), cudaMemcpyDeviceToHost));
 
   CHECK(cudaFree(bs));
 
   return r;
 }
 
-__host__ double norm(double *v, int N)
+__host__ float norm(float *v, int N)
 {
   return sqrt(inner_product_gpu(v, v, N));
 }
 
 // TODO still work in progress
 // initial guess is 0
-/* extern "C" double conjugate_gradient_gpu(const double * b, double * x , const int L, const int d)
+/* extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
 {
   int nthreads = 265;
   int N = pow(L, d);
   assert(N > nthreads);
   int nblocks = N/nthreads +1;
-  double *r = cuda_allocate_field(N);
-
-  while (residue > tol)
+  float *r = cuda_allocate_field(N);
+  float residue = 0;
+  float reltol = 1e-6*norm(b, N);
+  while (residue > reltol)
   {
     i++;
     laplace_gpu<<<nblocks, nthreads>>>(Ap, p, d, L, N, 0);
@@ -162,9 +163,7 @@ __host__ double norm(double *v, int N)
     muladd<<<nblocks, nthreads>>>(p, beta, p, N);
     CHECK(cudaDeviceSynchronize());
     rr = rr_new;
-    printf("residue: %f\n", residue);
+    printf("residue: %f at iteration: %i\n", residue, i);
   }
   return residue;
 } */
-  
-  
