@@ -76,14 +76,14 @@ __global__ void laplace_gpu(float *ddf, float *u, int d,
 }
 
 __global__ void reduceMulAddComplete(double *v, double *w, double *g_odata,
-                                            unsigned int n, unsigned int nthreads)
+                                            unsigned int n,const unsigned int nthreads)
 {
   // set thread ID
   unsigned int tid = threadIdx.x;
   unsigned int gridSize = blockDim.x * 2 * gridDim.x;
   unsigned int idx = blockIdx.x * blockDim.x * 2 + threadIdx.x;
 
-  __shared__ double tmp[nthreads];
+  extern __shared__ double tmp[]; // shared memory can be given as 3rd argument to allocate it dynamicially
 
   // unroll as many as possible
   double sum = 0.0;
@@ -118,13 +118,13 @@ __global__ void reduceMulAddComplete(double *v, double *w, double *g_odata,
 extern "C" double inner_product_gpu(double *v, double *w, unsigned int N)
 {
   double *bs, r;
-  int nthreads = 265;
+  const int nthreads = 265;
   int nblocks = N/nthreads +1;
 
   // bs is only size 1 not size nblocks?
   CHECK(cudaMalloc((void **)&bs, sizeof(double))); 
 
-  reduceMulAddComplete<<<nblocks, nthreads>>>(v, w, bs, N, nthreads);
+  reduceMulAddComplete<<<nblocks, nthreads, nthreads*sizeof(float)>>>(v, w, bs, N, nthreads);
   CHECK(cudaDeviceSynchronize());
   CHECK(cudaMemcpy(&r, bs, sizeof(double), cudaMemcpyDeviceToHost));
 
@@ -133,7 +133,7 @@ extern "C" double inner_product_gpu(double *v, double *w, unsigned int N)
   return r;
 }
 
-__device__ double norm(const double *v, const int N)
+__host__ double norm(double *v, int N)
 {
   return sqrt(inner_product_gpu(v, v, N));
 }
