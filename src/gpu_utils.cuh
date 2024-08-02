@@ -39,7 +39,7 @@ __device__ int get_index_gpu(int *cords, int L, int d, int N)
   return index;
 }
 
-__device__ int neighbour_index_gpu(int ind, int direction, int amount, int L, int d,
+extern "C" __host__ __device__ int neighbour_index_gpu(int ind, int direction, int amount, int L, int d,
                     int N, int index_mode)
 {
   assert(amount == 1 || amount == -1 || amount == 0);
