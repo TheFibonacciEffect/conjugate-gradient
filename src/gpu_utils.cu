@@ -44,6 +44,9 @@ extern "C" __host__ __device__ int neighbour_index_gpu(int ind, int direction, i
   }
   ind += amount*n;
   // TODO Is there hardware side bounds checking? (See intel MPX)
+  if (ind % L == 0 || ind +1 % L == 0 || ind < 0 || ind > N){
+    return N;
+  }
   return ind;
 }
 
