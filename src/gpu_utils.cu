@@ -33,9 +33,26 @@ __device__ int get_index_gpu(int *cords, int L, int d, int N)
   return index;
 }
 
+static inline __device__ __host__ int index_to_cords(int index, int L, int d) {
+  for (int i = 0; i < d; i++) {
+    index /= L;
+  }
+  return index % L;
+}
+
 extern "C" __host__ __device__ int neighbour_index_gpu(int ind, int direction, int amount, int L, int d,
                     int N, int index_mode)
 {
+  // if on boundary => return 0 through special index
+  // TODO Is there hardware side bounds checking? (See intel MPX)
+  for (int c = 0; c < d; c++)
+  {
+    // should be consistant with cpu code
+    int cord =  index_to_cords(ind,L,c);
+    printf("%d\n",cord);
+    if (cord > L || cord < 0 || cord == -1 || cord == L) return N;
+  }
+  
   assert(amount == 1 || amount == -1 || amount == 0);
   int n=1;
   for (int i=0; i<direction; i++)
@@ -43,10 +60,6 @@ extern "C" __host__ __device__ int neighbour_index_gpu(int ind, int direction, i
       n *= L;
   }
   ind += amount*n;
-  // TODO Is there hardware side bounds checking? (See intel MPX)
-  if (ind % L == 0 || ind +1 % L == 0 || ind < 0 || ind > N){
-    return N;
-  }
   return ind;
 }
 
@@ -130,4 +143,28 @@ extern "C" float inner_product_gpu(float *v, float *w, unsigned int N)
 __host__ float norm(float *v, int N)
 {
   return sqrt(inner_product_gpu(v, v, N));
+}
+
+void tests() {
+  // index
+  assert(index_to_cords(4,3,1) == 1);
+  assert(index_to_cords(2,3,1) == 0);
+  assert(index_to_cords(2,3,0) == 2);
+}
+
+int main()
+{
+  // printf("%d\n",index_to_cords(10,3,2)); // 3x3x3 cube 
+  printf("%d\n",neighbour_index_gpu(0,1,1,3,3,3*3*3,0)); // 0 0 0 
+  printf("%d\n",neighbour_index_gpu(3,1,1,3,3,3*3*3,0)); // 0 1 0
+  printf("%d\n",neighbour_index_gpu(6,1,1,3,3,3*3*3,0)); // 0 2 0
+  printf("%d\n",neighbour_index_gpu(9,1,1,3,3,3*3*3,0)); // 0 0 1 => WRONG!
+
+  // printf("%d\n",neighbour_index_gpu(13,1,1,3,3,3*3*3,0)); // 3x3x3 cube (1,1,0) + (0,1,0)
+  // printf("%d\n",neighbour_index_gpu(16,1,1,3,3,3*3*3,0)); // 3x3x3 cube (1,2,0) + (0,1,0)
+  // printf("%d\n",neighbour_index_gpu(19,1,1,3,3,3*3*3,0)); // 3x3x3 cube (1,3,0) + (0,1,0)
+  // printf("%d\n",neighbour_index_gpu(22,1,1,3,3,3*3*3,0)); // 3x3x3 cube (1,4,0) + (0,1,0)
+  // printf("%d\n",neighbour_index_gpu(25,1,1,3,3,3*3*3,0)); // 3x3x3 cube (1,5,0) + (0,1,0)
+  // printf("%d\n",neighbour_index_gpu(10,1,-1,3,3,3*3*3,0)); // 3x3x3 cube (1,0,0) - (0,-1,0) => out of bounds
+  
 }

@@ -56,11 +56,13 @@ println(A)
 # res
 # CUDA.cudaDeviceSynchronize() #segfaults
 # # still contains NaN32!!
-# Libdl.dlclose(lib) # Close the library explicitly.
 
 @testset "indexing on GPU" begin
-    @test neighbour_index_gpu(2,0,1,3,2,9,0) == 3
-    @test neighbour_index_gpu(2,1,1,3,2,25,0) == 5
-
+    @test neighbour_index_gpu(2,1,1,3,2,9,0) == 5
+    # edges
+    @test neighbour_index_gpu(2,0,1,3,2,9,0) == 9
+    @test neighbour_index_gpu(3,0,-1,3,2,9,0) == 9
+    
 end;
+Libdl.dlclose(lib) # Close the library explicitly.
 
