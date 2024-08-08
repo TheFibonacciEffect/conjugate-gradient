@@ -172,6 +172,7 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
   float *r = cuda_allocate_field(N);
   float *Ap = cuda_allocate_field(N);
   float *p = cuda_allocate_field(N);
+  printf("%f > %f \n" , residue, reltol);
   while (residue > reltol)
   {
     i++;
@@ -219,6 +220,11 @@ int main()
   // printf("%d\n",neighbour_index_gpu(25,1,1,3,3,3*3*3,0)); // 3x3x3 cube (1,5,0) + (0,1,0)
   // printf("%d\n",neighbour_index_gpu(10,1,-1,3,3,3*3*3,0)); // 3x3x3 cube (1,0,0) - (0,-1,0) => out of bounds
   
+  int N = 1000;
+  float* x = cuda_allocate_field(N);
+  
+  cudaFree(x);
+
   // test conjugate gradient
   int N = 1000;
   int L = N;
@@ -234,5 +240,8 @@ int main()
   {
     printf("%f\n",xcpu[i]);
   }
+  cudaFree(x);
+  cudaFree(b);
+  free(xcpu);
   
 }
