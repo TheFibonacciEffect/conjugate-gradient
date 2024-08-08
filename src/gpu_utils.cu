@@ -205,6 +205,16 @@ __global__ void fillArray(float* arr, float value, int size) {
     }
 }
 
+void test_inner_product()
+{
+  // TODO test fails
+  int N = 1000;
+  float* x = cuda_allocate_field(N);
+  float r = inner_product_gpu(x,x,N);
+  printf("x*x =%f\n",r);
+  cudaFree(x);
+}
+
 int main()
 {
   // printf("%d\n",index_to_cords(10,3,2)); // 3x3x3 cube 
@@ -220,10 +230,7 @@ int main()
   // printf("%d\n",neighbour_index_gpu(25,1,1,3,3,3*3*3,0)); // 3x3x3 cube (1,5,0) + (0,1,0)
   // printf("%d\n",neighbour_index_gpu(10,1,-1,3,3,3*3*3,0)); // 3x3x3 cube (1,0,0) - (0,-1,0) => out of bounds
   
-  int N = 1000;
-  float* x = cuda_allocate_field(N);
-  
-  cudaFree(x);
+  test_inner_product();
 
   // test conjugate gradient
   int N = 1000;
