@@ -36,7 +36,7 @@ function neighbour_index_gpu(ind, direction, amount, L, d, N, index_mode)::Cint
 end
 
 # Define the wrapper function for `conjugate_gradient_gpu`
-function conjugate_gradient_gpu(b::CuArray{Float32}, x::CuArray{Float32}, L::Cint, d::Cint)::Cfloat
+function conjugate_gradient_gpu(b::CuArray{Float32}, x::CuArray{Float32}, L, d)::Cfloat
     sym = Libdl.dlsym(lib, :conjugate_gradient_gpu)
     @ccall $sym(get_ptr(b)::CuPtr{Cfloat}, get_ptr(x)::CuPtr{Cfloat}, L::Cint, d::Cint)::Cfloat
 end

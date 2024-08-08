@@ -168,7 +168,7 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
   int nblocks = N/nthreads +1;
   float reltol = 1e-6*norm(b, N);
   int i = 0;
-  float rr,rr_new,alpha,residue,beta = 0;
+  float rr = 0,rr_new = 0,alpha = 0,residue = 0,beta = 0;
   float *r = cuda_allocate_field(N);
   float *Ap = cuda_allocate_field(N);
   float *p = cuda_allocate_field(N);
@@ -194,6 +194,16 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
   return residue;
 }
 
+__global__ void fillArray(float* arr, float value, int size) {
+    // Calculate the global thread index
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    // Check if within bounds
+    if (idx < size) {
+        arr[idx] = value;
+    }
+}
+
 int main()
 {
   // printf("%d\n",index_to_cords(10,3,2)); // 3x3x3 cube 
@@ -208,5 +218,21 @@ int main()
   // printf("%d\n",neighbour_index_gpu(22,1,1,3,3,3*3*3,0)); // 3x3x3 cube (1,4,0) + (0,1,0)
   // printf("%d\n",neighbour_index_gpu(25,1,1,3,3,3*3*3,0)); // 3x3x3 cube (1,5,0) + (0,1,0)
   // printf("%d\n",neighbour_index_gpu(10,1,-1,3,3,3*3*3,0)); // 3x3x3 cube (1,0,0) - (0,-1,0) => out of bounds
+  
+  // test conjugate gradient
+  int N = 1000;
+  int L = N;
+  int d = 1;
+  float* x = cuda_allocate_field(N);
+  float* b = cuda_allocate_field(N);
+  fillArray<<<1,1024>>>(b,1,N);
+  conjugate_gradient_gpu(b,x,L,d);
+  CHECK(cudaDeviceSynchronize());
+  float * xcpu = (float*)malloc(N*sizeof(float));
+  cudaMemcpy(xcpu,x,N*sizeof(float),cudaMemcpyDeviceToHost);
+  for (int i = 0; i < N; i++)
+  {
+    printf("%f\n",xcpu[i]);
+  }
   
 }
