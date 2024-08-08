@@ -152,6 +152,48 @@ void tests() {
   assert(index_to_cords(2,3,0) == 2);
 }
 
+// A = b*B
+__global__ void muladd(float* A, float b, float* B, int N)
+{
+  int ind = blockIdx.x * blockDim.x + threadIdx.x;
+  if (ind >= N) return;
+  A[ind] = b*B[ind];
+}
+
+extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
+{
+  int nthreads = 265;
+  int N = pow(L, d);
+  assert(N > nthreads);
+  int nblocks = N/nthreads +1;
+  float reltol = 1e-6*norm(b, N);
+  int i = 0;
+  float rr,rr_new,alpha,residue,beta = 0;
+  float *r = cuda_allocate_field(N);
+  float *Ap = cuda_allocate_field(N);
+  float *p = cuda_allocate_field(N);
+  while (residue > reltol)
+  {
+    i++;
+    laplace_gpu<<<nblocks, nthreads>>>(Ap, p, d, L, N, 0);
+    CHECK(cudaDeviceSynchronize());
+    alpha = rr / inner_product_gpu(p, Ap, N);
+    muladd<<<nblocks, nthreads>>>(x, alpha, p, N);
+    muladd<<<nblocks, nthreads>>>(r, -alpha, Ap, N);
+    CHECK(cudaDeviceSynchronize());
+    rr_new = inner_product_gpu(r, r, N);
+    beta = rr_new / rr;
+    muladd<<<nblocks, nthreads>>>(p, beta, p, N);
+    CHECK(cudaDeviceSynchronize());
+    rr = rr_new;
+    printf("residue: %f at iteration: %i\n", residue, i);
+  }
+  cudaFree(r);
+  cudaFree(Ap);
+  cudaFree(p);
+  return residue;
+}
+
 int main()
 {
   // printf("%d\n",index_to_cords(10,3,2)); // 3x3x3 cube 

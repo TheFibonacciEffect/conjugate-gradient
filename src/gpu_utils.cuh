@@ -32,30 +32,4 @@ __host__ float norm(float *v, int N);
 
 // TODO still work in progress
 // initial guess is 0
-/* extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
-{
-  int nthreads = 265;
-  int N = pow(L, d);
-  assert(N > nthreads);
-  int nblocks = N/nthreads +1;
-  float *r = cuda_allocate_field(N);
-  float residue = 0;
-  float reltol = 1e-6*norm(b, N);
-  while (residue > reltol)
-  {
-    i++;
-    laplace_gpu<<<nblocks, nthreads>>>(Ap, p, d, L, N, 0);
-    CHECK(cudaDeviceSynchronize());
-    alpha = rr / inner_product_gpu(p, Ap, N);
-    muladd<<<nblocks, nthreads>>>(x, alpha, p, N);
-    muladd<<<nblocks, nthreads>>>(r, -alpha, Ap, N);
-    CHECK(cudaDeviceSynchronize());
-    rr_new = inner_product_gpu(r, r, N);
-    beta = rr_new / rr;
-    muladd<<<nblocks, nthreads>>>(p, beta, p, N);
-    CHECK(cudaDeviceSynchronize());
-    rr = rr_new;
-    printf("residue: %f at iteration: %i\n", residue, i);
-  }
-  return residue;
-} */
+extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d);
