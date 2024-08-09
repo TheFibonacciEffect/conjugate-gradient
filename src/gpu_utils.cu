@@ -43,16 +43,23 @@ static inline __device__ __host__ int index_to_cords(int index, int L, int d) {
 extern "C" __host__ __device__ int neighbour_index_gpu(int ind, int direction, int amount, int L, int d,
                     int N, int index_mode)
 {
+
+    // 3x3 3 => x = 0, y = 1
+
+    // 0 1 2
+    // 3 4 5
+    // 6 7 8
+
+    // for c = 0 => 0
+    // for c = 1 => 1
+
+    // should be consistant with cpu code
+    int cord =  index_to_cords(ind,L,direction);
+    cord += amount;
+    if (/*cord > L || cord < 0 ||*/ cord == -1 || cord == L) return N;
+
   // if on boundary => return 0 through special index
   // TODO Is there hardware side bounds checking? (See intel MPX)
-  for (int c = 0; c < d; c++)
-  {
-    // should be consistant with cpu code
-    int cord =  index_to_cords(ind,L,c);
-    printf("%d\n",cord);
-    if (cord > L || cord < 0 || cord == -1 || cord == L) return N;
-  }
-  
   assert(amount == 1 || amount == -1 || amount == 0);
   int n=1;
   for (int i=0; i<direction; i++)
@@ -60,6 +67,7 @@ extern "C" __host__ __device__ int neighbour_index_gpu(int ind, int direction, i
       n *= L;
   }
   ind += amount*n;
+  
   return ind;
 }
 
@@ -257,10 +265,10 @@ int main()
   CHECK(cudaDeviceSynchronize());
   float * xcpu = (float*)malloc(N*sizeof(float));
   cudaMemcpy(xcpu,x,N*sizeof(float),cudaMemcpyDeviceToHost);
-  for (int i = 0; i < N; i++)
-  {
-    printf("%f ",xcpu[i]);
-  }
+  // for (int i = 0; i < N; i++)
+  // {
+  //   printf("%f ",xcpu[i]);
+  // }
   cudaFree(x);
   cudaFree(b);
   free(xcpu);
