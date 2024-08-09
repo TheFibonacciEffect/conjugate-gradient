@@ -52,16 +52,16 @@ add_jl(A, B, 9, 1)
 # Verify the result
 println(A)
 
-# # TODO Fix Segfault in laplace operator
-# N = 1000*124
-# res = CUDA.fill(NaN32,N)
-# B = range(-1f0pi,1f0pi,N) .|> sin
-# plot(B)
-# u = CuArray(B)
-# laplace_gpu_jl(res,u,1f0,1,N,N,0,1000,124)
-# res
+# TODO Fix Segfault in laplace operator
+N = 1000*124
+res = CUDA.fill(NaN32,N)
+B = range(-1f0pi,1f0pi,N) .|> sin
+plot(B)
+u = CuArray(B)
+laplace_gpu_jl(res,u,1f0,1,N,N,0,1000,124)
+res
 # CUDA.cudaDeviceSynchronize() #segfaults
-# # still contains NaN32!!
+# still contains NaN32!!
 
 @testset "indexing on GPU" begin
     @test neighbour_index_gpu(2,1,1,3,2,9,0) == 5

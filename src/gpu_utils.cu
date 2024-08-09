@@ -86,7 +86,7 @@ __global__ void laplace_gpu(float *ddf, float *u, int d,
                        u[neighbour_index_gpu(ind, i, -1, L, d, N, index_mode)];
     }
     // the discrete version is defined without dx
-    // ddf[ind] = laplace_value / pow(dx, d);
+    ddf[ind] = laplace_value; /// pow(dx, d);
   }
 }
 
@@ -220,7 +220,7 @@ __global__ void fillArray(float* arr, float value, int size) {
     }
 }
 
-void test_inner_product()
+static void test_inner_product()
 {
   // TODO test fails
   int N = 1000;
