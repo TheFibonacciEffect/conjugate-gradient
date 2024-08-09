@@ -90,6 +90,7 @@ __global__ void reduceMulAddComplete(float *v, float *w, float *g_odata,
   unsigned int gridSize = blockDim.x * 2 * gridDim.x;
   unsigned int idx = blockIdx.x * blockDim.x * 2 + threadIdx.x;
 
+  // shared memory is per block
   extern __shared__ float tmp[]; // shared memory can be given as 3rd argument to allocate it dynamicially
 
   // unroll as many as possible
@@ -125,10 +126,10 @@ __global__ void reduceMulAddComplete(float *v, float *w, float *g_odata,
 extern "C" float inner_product_gpu(float *v, float *w, unsigned int N)
 {
   float *bs, r;
-  const int nthreads = 265;
+  const int nthreads = 1024;
   int nblocks = N/nthreads +1;
 
-  // bs is only size 1 not size nblocks?
+  // bs is only size 1 not size nblocks, this is because of the definition of atomic add
   CHECK(cudaMalloc((void **)&bs, sizeof(float))); 
 
   reduceMulAddComplete<<<nblocks, nthreads, nthreads*sizeof(float)>>>(v, w, bs, N, nthreads);
@@ -210,10 +211,17 @@ void test_inner_product()
   // TODO test fails
   int N = 1000;
   float* x = cuda_allocate_field(N);
+  fillArray<<<1,1024>>>(x,1,N);
   float r = inner_product_gpu(x,x,N);
   printf("x*x =%f\n",r);
+  assert(r==N);
   cudaFree(x);
 }
+
+
+// TODO
+// Bounds checking
+// Inner product works in tests
 
 int main()
 {
@@ -245,7 +253,7 @@ int main()
   cudaMemcpy(xcpu,x,N*sizeof(float),cudaMemcpyDeviceToHost);
   for (int i = 0; i < N; i++)
   {
-    printf("%f\n",xcpu[i]);
+    printf("%f ",xcpu[i]);
   }
   cudaFree(x);
   cudaFree(b);
