@@ -173,7 +173,11 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
   muladd<<<nblocks,nthreads>>>(r,1,b,N);
   float *Ap = cuda_allocate_field(N);
   float *p = cuda_allocate_field(N);
-  float rr = NAN,rr_new = NAN,alpha = NAN,residue = norm(r,N),beta = 0; //TODO: Is this correct syntax?
+  float rr = NAN;
+  float rr_new = NAN;
+  float alpha = NAN;
+  float residue = norm(r,N);
+  float beta = 0; 
   printf("%f > %f \n" , residue, reltol);
   while (residue > reltol)
   {
