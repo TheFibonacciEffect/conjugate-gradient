@@ -169,10 +169,11 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
   int nblocks = N/nthreads +1;
   float reltol = 1e-6*norm(b, N);
   int i = 0;
-  float rr = 0,rr_new = 0,alpha = 0,residue = 0,beta = 0;
   float *r = cuda_allocate_field(N);
+  muladd<<<nblocks,nthreads>>>(r,1,b,N);
   float *Ap = cuda_allocate_field(N);
   float *p = cuda_allocate_field(N);
+  float rr = NAN,rr_new = NAN,alpha = NAN,residue = norm(r,N),beta = 0; //TODO: Is this correct syntax?
   printf("%f > %f \n" , residue, reltol);
   while (residue > reltol)
   {
@@ -187,6 +188,7 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
     beta = rr_new / rr;
     muladd<<<nblocks, nthreads>>>(p, beta, p, N);
     CHECK(cudaDeviceSynchronize());
+    residue = sqrt(rr); //TODO replace sqrt by square => faster
     rr = rr_new;
     printf("residue: %f at iteration: %i\n", residue, i);
   }

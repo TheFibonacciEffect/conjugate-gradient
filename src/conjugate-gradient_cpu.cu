@@ -137,8 +137,8 @@ double conjugate_gradient(const double *b, double *x, int L, int d) {
     for (int i = 0; i < N; i++) {
       p[i] = r[i] + beta * p[i];
     }
+    residue = sqrt(rr);
     rr = rr_new;
-    residue = norm(r, N);
   }
   free(Ap);
   free(r);
