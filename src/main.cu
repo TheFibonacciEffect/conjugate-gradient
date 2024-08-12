@@ -75,5 +75,6 @@ extern "C"
                                    int L, int N, unsigned int index_mode,unsigned int blocks, unsigned int threads)
   {
     laplace_gpu<<<blocks,threads>>>(ddf,u,d,L,N,index_mode);
+    CHECK(cudaDeviceSynchronize());
   }
 }

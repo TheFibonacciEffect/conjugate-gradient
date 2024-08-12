@@ -81,12 +81,14 @@ __global__ void laplace_gpu(float *ddf, float *u, int d,
     float laplace_value = 0;
     for (int i = 0; i < d; i++)
     {
-      laplace_value += -u[neighbour_index_gpu(ind, i, 1, L, d, N, index_mode)] +
-                       2 * u[neighbour_index_gpu(ind, i, 0, L, d, N, index_mode)] -
-                       u[neighbour_index_gpu(ind, i, -1, L, d, N, index_mode)];
+      laplace_value += - u[neighbour_index_gpu(ind, i, 1, L, d, N, index_mode)]
+                       + 2 * u[neighbour_index_gpu(ind, i, 0, L, d, N, index_mode)]
+                       - u[neighbour_index_gpu(ind, i, -1, L, d, N, index_mode)];
     }
     // the discrete version is defined without dx
     ddf[ind] = laplace_value; /// pow(dx, d);
+    // ddf[ind] = u[ind]; /// pow(dx, d);
+    // ddf[ind] = neighbour_index_gpu(ind, 0, 1, L, d, N, index_mode);
   }
 }
 
@@ -274,12 +276,46 @@ static void test_laplace_square()
   unsigned int index_mode = 0;
 
   squareKernel<<<blocksPerGrid, threadsPerBlock>>>(u, N, step);
+  CHECK(cudaDeviceSynchronize());
   laplace_gpu<<<blocksPerGrid,threadsPerBlock>>>(ddf,u,d,L,N,index_mode);
+  CHECK(cudaDeviceSynchronize());
   float * ddf_c = (float*)malloc(N*sizeof(float));
   cudaMemcpy(ddf_c,ddf,N*sizeof(float),cudaMemcpyDeviceToHost);
-  for (int i = 0; i < N; i++)
+  for (int i = 1; i < N-1; i++) // all except boundary
   {
-    printf("%f ",ddf_c[i]); // all the same value
+    // printf("%f ",ddf_c[i] -  ddf_c[N/2]); // all the same value
+    assert(abs(ddf_c[i] - ddf_c[N/2]) < 1e-3);
+  }
+  cudaFree(ddf);
+  cudaFree(u);
+}
+
+
+static void test_laplace_sin()
+{
+  int N = 1000;
+  float step = (2 * M_PI) / (N - 1);
+  float * ddf = cuda_allocate_field(N);
+  float * u = cuda_allocate_field(N);
+  int threadsPerBlock = 256;
+  int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
+
+  int L = N;
+  int d = 1;
+  unsigned int index_mode = 0;
+
+  sinKernel<<<blocksPerGrid, threadsPerBlock>>>(u, N, step);
+  CHECK(cudaDeviceSynchronize());
+  laplace_gpu<<<blocksPerGrid,threadsPerBlock>>>(ddf,u,d,L,N,index_mode);
+  CHECK(cudaDeviceSynchronize());
+  div<<<blocksPerGrid,threadsPerBlock>>>(ddf,u,ddf,N);
+  CHECK(cudaDeviceSynchronize());
+  float * ddf_c = (float*)malloc(N*sizeof(float));
+  cudaMemcpy(ddf_c,ddf,N*sizeof(float),cudaMemcpyDeviceToHost);
+  for (int i = 1; i < N-1; i++) // all except boundary
+  {
+    // printf("%f ",ddf_c[i] -  ddf_c[N/2]); // all the same value
+    assert(abs(ddf_c[i] - ddf_c[N/2]) < 1e-3);
   }
   cudaFree(ddf);
   cudaFree(u);
@@ -292,10 +328,9 @@ static void test_laplace_square()
 int main()
 {
   // printf("%d\n",index_to_cords(10,3,2)); // 3x3x3 cube 
-  printf("%d\n",neighbour_index_gpu(0,1,1,3,3,3*3*3,0)); // 0 0 0 
-  printf("%d\n",neighbour_index_gpu(3,1,1,3,3,3*3*3,0)); // 0 1 0
-  printf("%d\n",neighbour_index_gpu(6,1,1,3,3,3*3*3,0)); // 0 2 0
-  printf("%d\n",neighbour_index_gpu(9,1,1,3,3,3*3*3,0)); // 0 0 1 => WRONG!
+  printf("%d\n",neighbour_index_gpu(0,1,1,3,3,3*3*3,0)); 
+  printf("%d\n",neighbour_index_gpu(3,1,1,3,3,3*3*3,0));
+  printf("%d\n",neighbour_index_gpu(6,1,1,3,3,3*3*3,0));
 
   // printf("%d\n",neighbour_index_gpu(13,1,1,3,3,3*3*3,0)); // 3x3x3 cube (1,1,0) + (0,1,0)
   // printf("%d\n",neighbour_index_gpu(16,1,1,3,3,3*3*3,0)); // 3x3x3 cube (1,2,0) + (0,1,0)
@@ -306,6 +341,7 @@ int main()
   
   test_inner_product();
   test_laplace_square();
+  test_laplace_sin();
 
   // test conjugate gradient
   int N = 1000;

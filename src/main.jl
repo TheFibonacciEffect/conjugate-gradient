@@ -60,6 +60,7 @@ plot(B)
 u = CuArray(B)
 laplace_gpu_jl(res,u,1f0,1,N,N,0,1000,124)
 res
+# synchronize()
 # CUDA.cudaDeviceSynchronize() #segfaults
 # still contains NaN32!!
 
