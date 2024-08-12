@@ -240,7 +240,27 @@ __global__ void squareKernel(float *d_array, int n, float step) {
     }
 }
 
-static void test_laplace()
+__global__ void sinKernel(float *d_array, int n, float step) {
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx < n) {
+        float x = -M_PI + idx * step;
+        d_array[idx] = sin(x);
+    }
+}
+
+// CUDA kernel to perform element-wise division
+__global__ void div(float *d_array1, float *d_array2, float *d_result, int n) {
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx < n) {
+        if (d_array2[idx] != 0) {  // Check to avoid division by zero
+            d_result[idx] = d_array1[idx] / d_array2[idx];
+        } else {
+            d_result[idx] = NAN;
+        }
+    }
+}
+
+static void test_laplace_square()
 {
   int N = 1000;
   float step = (2 * M_PI) / (N - 1);
@@ -285,7 +305,7 @@ int main()
   // printf("%d\n",neighbour_index_gpu(10,1,-1,3,3,3*3*3,0)); // 3x3x3 cube (1,0,0) - (0,-1,0) => out of bounds
   
   test_inner_product();
-  test_laplace();
+  test_laplace_square();
 
   // test conjugate gradient
   int N = 1000;
