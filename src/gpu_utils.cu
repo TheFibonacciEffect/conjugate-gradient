@@ -232,6 +232,38 @@ static void test_inner_product()
   cudaFree(x);
 }
 
+__global__ void squareKernel(float *d_array, int n, float step) {
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx < n) {
+        float x = -M_PI + idx * step;
+        d_array[idx] = x * x;
+    }
+}
+
+static void test_laplace()
+{
+  int N = 1000;
+  float step = (2 * M_PI) / (N - 1);
+  float * ddf = cuda_allocate_field(N);
+  float * u = cuda_allocate_field(N);
+  int threadsPerBlock = 256;
+  int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
+
+  int L = N;
+  int d = 1;
+  unsigned int index_mode = 0;
+
+  squareKernel<<<blocksPerGrid, threadsPerBlock>>>(u, N, step);
+  laplace_gpu<<<blocksPerGrid,threadsPerBlock>>>(ddf,u,d,L,N,index_mode);
+  float * ddf_c = (float*)malloc(N*sizeof(float));
+  cudaMemcpy(ddf_c,ddf,N*sizeof(float),cudaMemcpyDeviceToHost);
+  for (int i = 0; i < N; i++)
+  {
+    printf("%f ",ddf_c[i]); // all the same value
+  }
+  cudaFree(ddf);
+  cudaFree(u);
+}
 
 // TODO
 // Bounds checking
@@ -253,6 +285,7 @@ int main()
   // printf("%d\n",neighbour_index_gpu(10,1,-1,3,3,3*3*3,0)); // 3x3x3 cube (1,0,0) - (0,-1,0) => out of bounds
   
   test_inner_product();
+  test_laplace();
 
   // test conjugate gradient
   int N = 1000;
