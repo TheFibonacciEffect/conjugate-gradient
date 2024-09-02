@@ -126,7 +126,7 @@ double conjugate_gradient(const double *b, double *x, int L, int d) {
     minus_laplace(Ap, p, dx, d, L, N);
     // double dx = 2.0 / (L - 1);
     // TODO Reuse variables
-    rr = inner_product(r, r, N);
+    rr = inner_product(r, r, N); // todo move this inner product to the beginning. You allready updated rr in the last line. This should be initialization.
     double alpha = rr / inner_product(p, Ap, N);
     for (int i = 0; i < N; i++) {
       x[i] = x[i] + alpha * p[i];

@@ -183,28 +183,33 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
   muladd<<<nblocks,nthreads>>>(r,1,b,N);
   float *Ap = cuda_allocate_field(N);
   float *p = cuda_allocate_field(N);
-  float rr = NAN;
-  float rr_new = NAN;
+  // p = r
+  muladd<<<nblocks,nthreads>>>(p,1,r,N);
+  float rr = inner_product_gpu(r, r, N);
+  float rr_new = rr;
   float alpha = NAN;
   float residue = norm(r,N);
   float beta = 0; 
   printf("%f > %f \n" , residue, reltol);
   while (residue > reltol)
   {
-    i++;
     laplace_gpu<<<nblocks, nthreads>>>(Ap, p, d, L, N, 0);
     CHECK(cudaDeviceSynchronize());
+    printf("inner_product_gpu(p, Ap, N): %f\n",inner_product_gpu(p, Ap, N)); // = 0 for some reason, because maybe p is zero?
     alpha = rr / inner_product_gpu(p, Ap, N);
     muladd<<<nblocks, nthreads>>>(x, alpha, p, N);
     muladd<<<nblocks, nthreads>>>(r, -alpha, Ap, N);
     CHECK(cudaDeviceSynchronize());
     rr_new = inner_product_gpu(r, r, N);
+    printf("rrnew : %f, alpha:  %f ", rr_new, alpha);
     beta = rr_new / rr;
     muladd<<<nblocks, nthreads>>>(p, beta, p, N);
     CHECK(cudaDeviceSynchronize());
+    printf("rr: %f\n",rr);
     residue = sqrt(rr); //TODO replace sqrt by square => faster
     rr = rr_new;
     printf("residue: %f at iteration: %i\n", residue, i);
+    i++;
   }
   cudaFree(r);
   cudaFree(Ap);
