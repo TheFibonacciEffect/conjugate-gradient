@@ -118,12 +118,13 @@ double conjugate_gradient(const double *b, double *x, int L, int d) {
   }
   double *Ap = allocate_field(N);
   float dx = 2.0 / (L - 1);
-  int i = 0;
+  int n = 0;
   double rr = NAN;
   double residue = norm(r, N);
   while (residue > tol) {
-    i++;
     minus_laplace(Ap, p, dx, d, L, N);
+    printf("inner_product(p, p, N): %f\n",inner_product(p, p, N));
+    printf("inner_product(p, Ap, N): %f\n",inner_product(p, Ap, N));
     // double dx = 2.0 / (L - 1);
     // TODO Reuse variables
     rr = inner_product(r, r, N); // todo move this inner product to the beginning. You allready updated rr in the last line. This should be initialization.
@@ -133,12 +134,16 @@ double conjugate_gradient(const double *b, double *x, int L, int d) {
       r[i] = r[i] - alpha * Ap[i];
     }
     double rr_new = inner_product(r, r, N);
+    printf("rrnew : %f, alpha:  %f ", rr_new, alpha);
     double beta = rr_new / rr;
     for (int i = 0; i < N; i++) {
       p[i] = r[i] + beta * p[i];
     }
+    printf("inner_product_gpu(p_old, Ap, N) should be 0: %f\n",inner_product(p, Ap, N));
     residue = sqrt(rr);
     rr = rr_new;
+    printf("residue: %f at iteration: %i\n", residue, n);
+    n++;
   }
   free(Ap);
   free(r);
@@ -308,6 +313,41 @@ bool test_cg(int L, int d, int N) {
   free(b);
   free(x0);
   return passed;
+}
+
+void cg_ones(int L, int d, int N) {
+  // allocate an array
+  double dx = 2.0 / (L - 1);
+  double *x = allocate_field(N);
+  double *b = allocate_field(N);
+  // fill it with random data
+  random_array(x, L, d, N);
+
+  // calculate b
+  b = minus_laplace(b, x, dx, d, L, N);
+  // initial guess
+  for (int i = 0; i<N; i++)
+  {
+    b[i] = 1;
+    x[i] = 0;
+  }
+  double *x0 = allocate_field(N);
+  for (int i = 0; i < N; i++) {
+    x0[i] = 0;
+  }
+  // apply conjugate gradient to calculate x
+  conjugate_gradient(b, x0, L, d);
+  // // compare with x
+  // bool passed = false;
+  // if (every_a(x, x0, N)) {
+  //   passed = true;
+  // } else {
+  //   passed = false;
+  // }
+  // free(x);
+  // free(b);
+  // free(x0);
+  // return passed;
 }
 
 bool test_preconditioner(int L, int d, int N) {
@@ -519,6 +559,7 @@ bool test_neighbour_index2() {
 // }
 
 extern int run_tests_cpu() {
+  printf("running tests");
   assert(test_laplace());
   assert(test_inner_product());
   assert(test_norm());
@@ -535,3 +576,12 @@ extern int run_tests_cpu() {
 }
 
 // TODO test if laplace is symmetric
+
+int main(int argc, char const *argv[])
+{
+  int N = 10;
+  int L = N;
+  int d = 1;
+  cg_ones(L,d,N);
+  return 0;
+}

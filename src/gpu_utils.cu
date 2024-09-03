@@ -1,10 +1,24 @@
 #include "gpu_utils.cuh"
+#include "conjugate-gradient_cpu.h"
+
+__global__ void fillArray(float* arr, float value, int size) {
+    // Calculate the global thread index
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    // Check if within bounds
+    if (idx < size) {
+        arr[idx] = value;
+    }
+}
+
 
 __host__ float *cuda_allocate_field(int N)
 {
   float *field;
   CHECK(cudaMallocManaged(&field, (N + 1) * sizeof(float)));
+  fillArray<<<1,N>>>(field,0,N);
   field[N] = 0;
+  cudaDeviceSynchronize();
   return field;
 }
 
@@ -189,10 +203,13 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
   int i = 0;
   float *r = cuda_allocate_field(N);
   muladd<<<nblocks,nthreads>>>(r,1,b,N); //assume r=0
+  cudaDeviceSynchronize();
+  printf("r= %f\n",r[5]);
   float *Ap = cuda_allocate_field(N);
   float *p = cuda_allocate_field(N);
   // p = r
   muladd<<<nblocks,nthreads>>>(p,1,r,N); //assume p=0
+  cudaDeviceSynchronize();
   float rr = inner_product_gpu(r, r, N);
   float rr_new = rr;
   float alpha = NAN;
@@ -201,9 +218,9 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
   printf("%f > %f \n" , residue, reltol);
   while (residue > reltol)
   {
-    // p_old = 
     laplace_gpu<<<nblocks, nthreads>>>(Ap, p, d, L, N, 0);
     CHECK(cudaDeviceSynchronize());
+    printf("inner_product_gpu(p, p, N): %f\n",inner_product_gpu(p, p, N));
     printf("inner_product_gpu(p, Ap, N): %f\n",inner_product_gpu(p, Ap, N));
     alpha = rr / inner_product_gpu(p, Ap, N);
     muladd<<<nblocks, nthreads>>>(x, alpha, p, N);
@@ -212,7 +229,13 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
     rr_new = inner_product_gpu(r, r, N);
     printf("rrnew : %f, alpha:  %f ", rr_new, alpha);
     beta = rr_new / rr;
+
+    cudaDeviceSynchronize();
     muladd3<<<nblocks, nthreads>>>(p,r, beta, p, N);
+    cudaDeviceSynchronize();
+    // check orthoginality of p
+    printf("inner_product_gpu(p_old, Ap, N) should be 0: %f\n",inner_product_gpu(p, Ap, N));
+
     CHECK(cudaDeviceSynchronize());
     printf("rr: %f\n",rr);
     residue = sqrt(rr); //TODO replace sqrt by square => faster
@@ -224,16 +247,6 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
   cudaFree(Ap);
   cudaFree(p);
   return residue;
-}
-
-__global__ void fillArray(float* arr, float value, int size) {
-    // Calculate the global thread index
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    
-    // Check if within bounds
-    if (idx < size) {
-        arr[idx] = value;
-    }
 }
 
 static void test_inner_product()
@@ -360,12 +373,13 @@ int main()
 
 
   // test conjugate gradient
-  int N = 1000;
+  int N = 10;
   int L = N;
   int d = 1;
   float* x = cuda_allocate_field(N);
   float* b = cuda_allocate_field(N);
   fillArray<<<1,1024>>>(b,1,N);
+  // fillArray<<<1,1024>>>(x,0,N);
   conjugate_gradient_gpu(b,x,L,d);
   CHECK(cudaDeviceSynchronize());
   float * xcpu = (float*)malloc(N*sizeof(float));
@@ -377,5 +391,4 @@ int main()
   cudaFree(x);
   cudaFree(b);
   free(xcpu);
-  
 }
