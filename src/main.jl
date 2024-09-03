@@ -3,11 +3,11 @@ using CUDA
 using Plots
 using Test
 
+# TODO Make library!!
 # Function to get the pointer of a CUDA array
 function get_ptr(A)
     return Base.unsafe_convert(CuPtr{Cfloat}, A)
 end
-
 # Load the shared library
 lib = Libdl.dlopen("./build/libconjugate_gradient_gpu.so")
 
@@ -54,8 +54,9 @@ println(A)
 
 # TODO Fix Segfault in laplace operator
 N = 1000*124
-res = CUDA.fill(NaN32,N)
-B = range(-1f0pi,1f0pi,N) .|> sin
+res = CUDA.fill(NaN32,N+1)
+B = range(-1f0pi,1f0pi,N+1) .|> sin
+B[N+1] = 0;
 plot(B)
 u = CuArray(B)
 laplace_gpu_jl(res,u,1f0,1,N,N,0,1000,124)

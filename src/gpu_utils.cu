@@ -168,7 +168,15 @@ __global__ void muladd(float* A, float b, float* B, int N)
 {
   int ind = blockIdx.x * blockDim.x + threadIdx.x;
   if (ind >= N) return;
-  A[ind] = b*B[ind];
+  A[ind] = A[ind] + b*B[ind];
+}
+
+// A = C + b*B
+__global__ void muladd3(float* A, float * C, float b, float* B, int N)
+{
+  int ind = blockIdx.x * blockDim.x + threadIdx.x;
+  if (ind >= N) return;
+  A[ind] = C[ind] + b*B[ind];
 }
 
 extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
@@ -180,11 +188,11 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
   float reltol = 1e-6*norm(b, N);
   int i = 0;
   float *r = cuda_allocate_field(N);
-  muladd<<<nblocks,nthreads>>>(r,1,b,N);
+  muladd<<<nblocks,nthreads>>>(r,1,b,N); //assume r=0
   float *Ap = cuda_allocate_field(N);
   float *p = cuda_allocate_field(N);
   // p = r
-  muladd<<<nblocks,nthreads>>>(p,1,r,N);
+  muladd<<<nblocks,nthreads>>>(p,1,r,N); //assume p=0
   float rr = inner_product_gpu(r, r, N);
   float rr_new = rr;
   float alpha = NAN;
@@ -193,9 +201,10 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
   printf("%f > %f \n" , residue, reltol);
   while (residue > reltol)
   {
+    // p_old = 
     laplace_gpu<<<nblocks, nthreads>>>(Ap, p, d, L, N, 0);
     CHECK(cudaDeviceSynchronize());
-    printf("inner_product_gpu(p, Ap, N): %f\n",inner_product_gpu(p, Ap, N)); // = 0 for some reason, because maybe p is zero?
+    printf("inner_product_gpu(p, Ap, N): %f\n",inner_product_gpu(p, Ap, N));
     alpha = rr / inner_product_gpu(p, Ap, N);
     muladd<<<nblocks, nthreads>>>(x, alpha, p, N);
     muladd<<<nblocks, nthreads>>>(r, -alpha, Ap, N);
@@ -203,7 +212,7 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
     rr_new = inner_product_gpu(r, r, N);
     printf("rrnew : %f, alpha:  %f ", rr_new, alpha);
     beta = rr_new / rr;
-    muladd<<<nblocks, nthreads>>>(p, beta, p, N);
+    muladd3<<<nblocks, nthreads>>>(p,r, beta, p, N);
     CHECK(cudaDeviceSynchronize());
     printf("rr: %f\n",rr);
     residue = sqrt(rr); //TODO replace sqrt by square => faster
@@ -347,6 +356,8 @@ int main()
   test_inner_product();
   test_laplace_square();
   test_laplace_sin();
+  // TODO compare laplace to cpu version
+
 
   // test conjugate gradient
   int N = 1000;
