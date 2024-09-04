@@ -100,6 +100,7 @@ double *allocate_field(int N) {
 }
 
 double conjugate_gradient(const double *b, double *x, int L, int d) {
+  printf("calling cg");
   // Solve Ax = b
   // x is initial guess
   // x is overwritten
@@ -122,9 +123,34 @@ double conjugate_gradient(const double *b, double *x, int L, int d) {
   double rr = NAN;
   double residue = norm(r, N);
   while (residue > tol) {
+    printf("iteration %d\n",n);
+    
+
     minus_laplace(Ap, p, dx, d, L, N);
     printf("inner_product(p, p, N): %f\n",inner_product(p, p, N));
     printf("inner_product(p, Ap, N): %f\n",inner_product(p, Ap, N));
+
+    printf("array p: ");
+    for (int i = 0; i < N+1; i++)
+    {
+      printf("%f, ", p[i]);
+    }
+    printf("\n");
+    
+    printf("array Ap: ");
+    for (int i = 0; i < N+1; i++)
+    {
+      printf("%f, ", Ap[i]);
+    }
+    printf("\n");
+    
+    printf("array r: ");
+    for (int i = 0; i < N+1; i++)
+    {
+      printf("%f, ", r[i]);
+    }
+    printf("\n");
+    
     // double dx = 2.0 / (L - 1);
     // TODO Reuse variables
     rr = inner_product(r, r, N); // todo move this inner product to the beginning. You allready updated rr in the last line. This should be initialization.
@@ -287,6 +313,7 @@ double *random_array(double *r, int L, int d, int N) {
 }
 
 bool test_cg(int L, int d, int N) {
+  printf("testing cg\n");
   // allocate an array
   double dx = 2.0 / (L - 1);
   double *x = allocate_field(N);
@@ -312,6 +339,7 @@ bool test_cg(int L, int d, int N) {
   free(x);
   free(b);
   free(x0);
+  printf("result: %d\n", passed);
   return passed;
 }
 
@@ -579,7 +607,14 @@ extern int run_tests_cpu() {
 
 int main(int argc, char const *argv[])
 {
-  int N = 10;
+  // Redirect stdout to /dev/null
+  FILE *tmp = stdout;
+  stdout = fopen("/dev/null", "w");
+
+  run_tests_cpu();
+  // Restore stdout
+  stdout = tmp;
+  int N = 100;
   int L = N;
   int d = 1;
   cg_ones(L,d,N);
