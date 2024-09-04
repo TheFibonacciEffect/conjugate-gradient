@@ -40,7 +40,7 @@ int *index_to_cords(int *cords, int index, int L, int d) {
   return cords;
 }
 
-double *minus_laplace(double *ddf, double *u, double dx, int d, int L, int N) {
+double *minus_laplace(double *ddf, double *u, int d, int L, int N) {
   for (int ind = 0; ind < N; ind++) {
     int cords[d];
     index_to_cords(cords, ind, L, d);
@@ -50,8 +50,7 @@ double *minus_laplace(double *ddf, double *u, double dx, int d, int L, int N) {
                        2 * u[neighbour_index(cords, i, 0, L, d, N)] -
                        u[neighbour_index(cords, i, -1, L, d, N)];
     }
-    // TODO remove dx
-    ddf[ind] = laplace_value / pow(dx, d);
+    ddf[ind] = laplace_value;
   }
   return ddf;
 }
@@ -107,7 +106,7 @@ double conjugate_gradient(const double *b, double *x, int L, int d) {
   // returns norm of residue
   int N = pow(L, d);
   double *r = allocate_field(N);
-  minus_laplace(x, x, 2.0 / (L - 1), d, L, N);
+  minus_laplace(x, x, d, L, N);
   for (int i = 0; i < N; i++) {
     r[i] = b[i] - x[i];
   }
@@ -126,7 +125,7 @@ double conjugate_gradient(const double *b, double *x, int L, int d) {
     printf("iteration %d\n",n);
     
 
-    minus_laplace(Ap, p, dx, d, L, N);
+    minus_laplace(Ap, p, d, L, N);
     printf("inner_product(p, p, N): %f\n",inner_product(p, p, N));
     printf("inner_product(p, Ap, N): %f\n",inner_product(p, Ap, N));
 
@@ -207,7 +206,7 @@ double preconditioner(double *b, double *x, int L, int d, double errtol) {
   double rr = NAN;
   while (res > tol) {
     i++;
-    minus_laplace(Ap, p, dx, d, L, N);
+    minus_laplace(Ap, p, d, L, N);
     // double dx = 2.0 / (L - 1);
     // TODO Reuse variables
     rr = inner_product(r, r, N);
@@ -238,7 +237,7 @@ double *preconditioned_cg(double *b, double *x, int L, int d) {
   assert(N > 0);
   double *r = allocate_field(N);
   double *Ax = allocate_field(N);
-  minus_laplace(Ax, x, 2.0 / (L - 1), d, L, N);
+  minus_laplace(Ax, x, d, L, N);
   for (int i = 0; i < N; i++) {
     r[i] = b[i] - Ax[i];
   }
@@ -260,7 +259,7 @@ double *preconditioned_cg(double *b, double *x, int L, int d) {
   int maxitter = 1000;
   while (i < maxitter) {
     i++;
-    minus_laplace(Ap, p, dx, d, L, N);
+    minus_laplace(Ap, p, d, L, N);
     double alpha =
         rMinvr /
         inner_product(p, Ap, N); // two extremly large numbers => becomes
@@ -321,7 +320,7 @@ bool test_cg(int L, int d, int N) {
   // fill it with random data
   random_array(x, L, d, N);
   // calculate b
-  b = minus_laplace(b, x, dx, d, L, N);
+  b = minus_laplace(b, x, d, L, N);
   // initial guess
   double *x0 = allocate_field(N);
   for (int i = 0; i < N; i++) {
@@ -352,7 +351,7 @@ void cg_ones(int L, int d, int N) {
   random_array(x, L, d, N);
 
   // calculate b
-  b = minus_laplace(b, x, dx, d, L, N);
+  b = minus_laplace(b, x, d, L, N);
   // initial guess
   for (int i = 0; i<N; i++)
   {
@@ -386,7 +385,7 @@ bool test_preconditioner(int L, int d, int N) {
   // fill it with random data
   random_array(x, L, d, N);
   // calculate b
-  b = minus_laplace(b, x, dx, d, L, N);
+  b = minus_laplace(b, x, d, L, N);
   // initial guess
   double *x0 = allocate_field(N);
   for (int i = 0; i < N; i++) {
@@ -415,7 +414,7 @@ bool test_preconditioned_cg(int L, int d, int N) {
   // fill it with random data
   random_array(x, L, d, N);
   // calculate b
-  b = minus_laplace(b, x, dx, d, L, N);
+  b = minus_laplace(b, x, d, L, N);
   // initial guess
   double *x0 = allocate_field(N);
   for (int i = 0; i < N; i++) {
@@ -464,7 +463,7 @@ bool test_laplace() {
     u[i] = square(x, y);
   }
   double *ddf = allocate_field(N);
-  ddf = minus_laplace(ddf, u, dx, d, L, N);
+  ddf = minus_laplace(ddf, u, d, L, N);
 
   for (int i = 0; i < N; i++) {
     int cords[2];
