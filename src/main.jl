@@ -35,35 +35,12 @@ function neighbour_index_gpu(ind, direction, amount, L, d, N, index_mode)::Cint
     @ccall $sym(ind::Cint, direction::Cint, amount::Cint, L::Cint, d::Cint, N::Cint, index_mode::Cint)::Cint
 end
 
+
 # Define the wrapper function for `conjugate_gradient_gpu`
 function conjugate_gradient_gpu(b::CuArray{Float32}, x::CuArray{Float32}, L, d)::Cfloat
     sym = Libdl.dlsym(lib, :conjugate_gradient_gpu)
     @ccall $sym(get_ptr(b)::CuPtr{Cfloat}, get_ptr(x)::CuPtr{Cfloat}, L::Cint, d::Cint)::Cfloat
 end
-
-# Example usage
-N = 10
-A = CUDA.fill(1.0f0, N)
-B = CUDA.fill(3.0f0, N)
-
-# Call the `add_jl` function
-add_jl(A, B, 9, 1)
-
-# Verify the result
-println(A)
-
-# TODO Fix Segfault in laplace operator
-N = 1000*124
-res = CUDA.fill(NaN32,N+1)
-B = range(-1f0pi,1f0pi,N+1) .|> sin
-B[N+1] = 0;
-plot(B)
-u = CuArray(B)
-laplace_gpu_jl(res,u,1f0,1,N,N,0,1000,124)
-res
-# synchronize()
-# CUDA.cudaDeviceSynchronize() #segfaults
-# still contains NaN32!!
 
 @testset "indexing on GPU" begin
     @test neighbour_index_gpu(2,1,1,3,2,9,0) == 5
@@ -72,5 +49,5 @@ res
     @test neighbour_index_gpu(3,0,-1,3,2,9,0) == 9
     
 end;
-Libdl.dlclose(lib) # Close the library explicitly.
 
+Libdl.dlclose(lib) # Close the library explicitly.

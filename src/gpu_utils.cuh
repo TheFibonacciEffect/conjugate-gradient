@@ -33,3 +33,5 @@ __host__ float norm(float *v, int N);
 // TODO still work in progress
 // initial guess is 0
 extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d);
+
+__global__ void fillArray(float* arr, float value, int size);

@@ -101,9 +101,7 @@ __global__ void laplace_gpu(float *ddf, float *u, int d,
                        - u[neighbour_index_gpu(ind, i, -1, L, d, N, index_mode)];
     }
     // the discrete version is defined without dx
-    ddf[ind] = laplace_value; /// pow(dx, d);
-    // ddf[ind] = u[ind]; /// pow(dx, d);
-    // ddf[ind] = neighbour_index_gpu(ind, 0, 1, L, d, N, index_mode);
+    ddf[ind] = laplace_value; 
   }
 }
 
@@ -276,74 +274,4 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
   return residue;
 }
 
-static void test_inner_product()
-{
-  // TODO test fails
-  int N = 1000;
-  float* x = cuda_allocate_field(N);
-  fillArray<<<1,1024>>>(x,1,N);
-  float r = inner_product_gpu(x,x,N);
-  printf("x*x =%f\n",r);
-  assert(r==N);
-  cudaFree(x);
-}
 
-__global__ void squareKernel(float *d_array, int n, float step) {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx < n) {
-        float x = -M_PI + idx * step;
-        d_array[idx] = x * x;
-    }
-}
-
-__global__ void sinKernel(float *d_array, int n, float step) {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx < n) {
-        float x = -M_PI + idx * step;
-        d_array[idx] = sin(x);
-    }
-}
-
-// CUDA kernel to perform element-wise division
-__global__ void div(float *d_array1, float *d_array2, float *d_result, int n) {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx < n) {
-        if (d_array2[idx] != 0) {  // Check to avoid division by zero
-            d_result[idx] = d_array1[idx] / d_array2[idx];
-        } else {
-            d_result[idx] = NAN;
-        }
-    }
-}
-
-static void test_laplace_square()
-{
-  int N = 1000;
-  float step = (2 * M_PI) / (N - 1);
-  float * ddf = cuda_allocate_field(N);
-  float * u = cuda_allocate_field(N);
-  int threadsPerBlock = 256;
-  int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
-
-  int L = N;
-  int d = 1;
-  unsigned int index_mode = 0;
-
-  squareKernel<<<blocksPerGrid, threadsPerBlock>>>(u, N, step);
-  CHECK(cudaDeviceSynchronize());
-  laplace_gpu<<<blocksPerGrid,threadsPerBlock>>>(ddf,u,d,L,N,index_mode);
-  CHECK(cudaDeviceSynchronize());
-  float * ddf_c = (float*)malloc(N*sizeof(float));
-  cudaMemcpy(ddf_c,ddf,N*sizeof(float),cudaMemcpyDeviceToHost);
-  for (int i = 1; i < N-1; i++) // all except boundary
-  {
-    // printf("%f ",ddf_c[i] -  ddf_c[N/2]); // all the same value
-    assert(abs(ddf_c[i] - ddf_c[N/2]) < 1e-3);
-  }
-  cudaFree(ddf);
-  cudaFree(u);
-}
-
-// TODO
-// Bounds checking
-// Inner product works in tests
