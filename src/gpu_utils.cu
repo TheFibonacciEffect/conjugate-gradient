@@ -203,7 +203,6 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
   float *r = cuda_allocate_field(N);
   muladd<<<nblocks,nthreads>>>(r,1,b,N); //assume r=0
   cudaDeviceSynchronize();
-  printf("r= %f\n",r[5]);
   float *Ap = cuda_allocate_field(N);
   float *p = cuda_allocate_field(N);
   // p = r
@@ -214,69 +213,31 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
   float alpha = NAN;
   float residue = norm(r,N);
   float beta = 0; 
-  printf("%f > %f \n" , residue, reltol);
   while (residue > reltol)
   {
-    printf("iteration %d\n",i);
 
     laplace_gpu<<<nblocks, nthreads>>>(Ap, p, d, L, N, 0);
     CHECK(cudaDeviceSynchronize());
 
-
-    printf("array p: ");
-    for (int i = 0; i < N+1; i++)
-    {
-      printf("%f, ", p[i]);
-    }
-    printf("\n");
-    
-    printf("array Ap: ");
-    for (int i = 0; i < N+1; i++)
-    {
-      printf("%f, ", Ap[i]);
-    }
-    printf("\n");
-    
-    printf("array r: ");
-    for (int i = 0; i < N+1; i++)
-    {
-      printf("%f, ", r[i]);
-    }
-    printf("\n");
-
-
-    printf("inner_product_gpu(p, p, N): %f\n",inner_product_gpu(p, p, N));
-    printf("inner_product_gpu(p, Ap, N): %f\n",inner_product_gpu(p, Ap, N));
     alpha = rr / inner_product_gpu(p, Ap, N);
     muladd<<<nblocks, nthreads>>>(x, alpha, p, N);
     muladd<<<nblocks, nthreads>>>(r, -alpha, Ap, N);
     CHECK(cudaDeviceSynchronize());
     rr_new = inner_product_gpu(r, r, N);
-    printf("rrnew : %f, alpha:  %f ", rr_new, alpha);
     beta = rr_new / rr;
 
     cudaDeviceSynchronize();
     muladd3<<<nblocks, nthreads>>>(p,r, beta, p, N);
     cudaDeviceSynchronize();
-    // check orthoginality of p
-    printf("inner_product_gpu(p_old, Ap, N) should be 0: %f\n",inner_product_gpu(p, Ap, N));
-
     CHECK(cudaDeviceSynchronize());
-    printf("rr: %f\n",rr);
-    residue = sqrt(rr); //TODO replace sqrt by square => faster
+    residue = sqrt(rr);
     rr = rr_new;
-    printf("residue: %f at iteration: %i\n", residue, i);
     i++;
-    printf("here\n");
   }
-  printf("here\n");
   cudaFree(r);
   cudaFree(Ap);
   cudaFree(p);
   CHECK(cudaDeviceSynchronize());
-  printf("here 2\n");
-  printf("%f\n",residue);
-  // TODO this sometimes segfaults unexpectedly. I have no idea why. 
   return residue;
 }
 

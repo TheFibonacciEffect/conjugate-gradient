@@ -98,12 +98,11 @@ double *allocate_field(int N) {
   return r;
 }
 
+// Solve Ax = b
+// x is initial guess
+// x is overwritten
+// returns norm of residue
 double conjugate_gradient(const double *b, double *x, int L, int d) {
-  printf("calling cg");
-  // Solve Ax = b
-  // x is initial guess
-  // x is overwritten
-  // returns norm of residue
   int N = pow(L, d);
   double *r = allocate_field(N);
   minus_laplace(x, x, d, L, N);
@@ -119,55 +118,24 @@ double conjugate_gradient(const double *b, double *x, int L, int d) {
   double *Ap = allocate_field(N);
   float dx = 2.0 / (L - 1);
   int n = 0;
-  double rr = NAN;
+  double rr = inner_product(r, r, N);
   double residue = norm(r, N);
   while (residue > tol) {
-    printf("iteration %d\n",n);
     
 
     minus_laplace(Ap, p, d, L, N);
-    printf("inner_product(p, p, N): %f\n",inner_product(p, p, N));
-    printf("inner_product(p, Ap, N): %f\n",inner_product(p, Ap, N));
-
-    printf("array p: ");
-    for (int i = 0; i < N+1; i++)
-    {
-      printf("%f, ", p[i]);
-    }
-    printf("\n");
-    
-    printf("array Ap: ");
-    for (int i = 0; i < N+1; i++)
-    {
-      printf("%f, ", Ap[i]);
-    }
-    printf("\n");
-    
-    printf("array r: ");
-    for (int i = 0; i < N+1; i++)
-    {
-      printf("%f, ", r[i]);
-    }
-    printf("\n");
-    
-    // double dx = 2.0 / (L - 1);
-    // TODO Reuse variables
-    rr = inner_product(r, r, N); // todo move this inner product to the beginning. You allready updated rr in the last line. This should be initialization.
     double alpha = rr / inner_product( p, Ap, N);
     for (int i = 0; i < N; i++) {
       x[i] = x[i] + alpha * p[i];
       r[i] = r[i] - alpha * Ap[i];
     }
     double rr_new = inner_product(r, r, N);
-    printf("rrnew : %f, alpha:  %f ", rr_new, alpha);
     double beta = rr_new / rr;
     for (int i = 0; i < N; i++) {
       p[i] = r[i] + beta * p[i];
     }
-    printf("inner_product_gpu(p_old, Ap, N) should be 0: %f\n",inner_product(p, Ap, N));
     residue = sqrt(rr);
     rr = rr_new;
-    printf("residue: %f at iteration: %i\n", residue, n);
     n++;
   }
   free(Ap);
@@ -175,15 +143,10 @@ double conjugate_gradient(const double *b, double *x, int L, int d) {
   free(p);
   return residue;
 }
+
 // on the GPU this will be done with floats and the conversion will be done in
 // the kernel
 double preconditioner(double *b, double *x, int L, int d, double errtol) {
-  // For testing
-  // for (int i=0; i< pow(L,d); i++)
-  // {
-  //     x[i] = b[i];
-  // }
-
   int N = pow(L, d);
   double *r = allocate_field(N);
   for (int i = 0; i < N; i++) {

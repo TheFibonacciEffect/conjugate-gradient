@@ -416,7 +416,6 @@ bool test_cg_gpu(int L, int d, int N) {
   }
   // apply conjugate gradient to calculate x
   conjugate_gradient_gpu(b, x0, L, d);
-  printf("conjugate gradient successful");
   // compare with x
   bool passed = false;
   if (every_a(x, x0, N)) {
