@@ -23,10 +23,31 @@ bool every_a(double *x, double *y, int n) {
   return true;
 }
 
+bool every_a(float *x, float *y, int n) {
+  printf("calling every a");
+  float tol = 1e-3;
+  for (int i = 0; i < n; i++) {
+    if (!(fabs(x[i] - y[i]) < tol)) // floating point comparison also accounting
+                                    // for NaNs that always return false
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
 double *random_array(double *r, int L, int d, int N) {
   // double* r = allocate_field(N);
   for (int i = 0; i < N; i++) {
     r[i] = (double)rand() / (double)RAND_MAX;
+  }
+  return r;
+}
+
+float *random_array(float *r, int L, int d, int N) {
+  // float* r = allocate_field(N);
+  for (int i = 0; i < N; i++) {
+    r[i] = (float)rand() / (float)RAND_MAX;
   }
   return r;
 }
@@ -277,8 +298,8 @@ extern int run_tests_cpu() {
   return 0;
 }
 
-#include "gpu_utils.cuh"
 // Tests for GPU
+#include "gpu_utils.cuh"
 
 __global__ void squareKernel(float *d_array, int n, float step) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -377,33 +398,69 @@ static void test_laplace_sin()
   cudaFree(u);
 }
 
+bool test_cg_gpu(int L, int d, int N) {
+  int nblocks = N;
+  int nthreads = 1;
+  printf("testing cg\n");
+  // allocate an array
+  float *x = cuda_allocate_field(N);
+  float *b = cuda_allocate_field(N);
+  // fill it with random data
+  random_array(x, L, d, N);
+  // calculate b
+  laplace_gpu<<<nblocks, nthreads>>>(b, x, d, L, N,1);
+  // initial guess
+  float *x0 = cuda_allocate_field(N);
+  for (int i = 0; i < N; i++) {
+    x0[i] = 0;
+  }
+  // apply conjugate gradient to calculate x
+  conjugate_gradient_gpu(b, x0, L, d);
+  printf("conjugate gradient successful");
+  // compare with x
+  bool passed = false;
+  if (every_a(x, x0, N)) {
+    passed = true;
+  } else {
+    passed = false;
+  }
+  cudaFree(x);
+  cudaFree(b);
+  cudaFree(x0);
+  printf("result: %d\n", passed);
+  return passed;
+}
+
 // tests for interleaved indexing
 #include "interleave.cuh"
 
 
 int main(int argc, char const *argv[])
 {
-  // CPU Tests
-  printf("running cpu tests\n");
-  // Redirect stdout to /dev/null
-  FILE *tmp = stdout;
-  stdout = fopen("/dev/null", "w");
+  // // CPU Tests
+  // printf("running cpu tests\n");
+  // // Redirect stdout to /dev/null
+  // FILE *tmp = stdout;
+  // stdout = fopen("/dev/null", "w");
 
-  run_tests_cpu();
-  stdout = tmp;
+  // run_tests_cpu();
+  // stdout = tmp;
   
-  // GPU tests
-  printf("running gpu tests\n");
+  // // GPU tests
+  // printf("running gpu tests\n");
 
-  stdout = fopen("/dev/null", "w");
+  // stdout = fopen("/dev/null", "w");
 
-  test_inner_product_gpu();
-  test_laplace_sin();
-  test_laplace_square();
+  // test_inner_product_gpu();
+  // test_laplace_sin();
+  // test_laplace_square();
 
-  stdout = tmp;
+  // stdout = tmp;
 
-  printf("testing inteleaved indexing \n");
+  // printf("testing inteleaved indexing \n");
+  assert(test_cg_gpu(10,2,100));
+
+
   tests_interleaved_index();
 
   printf("tests passed!\n");

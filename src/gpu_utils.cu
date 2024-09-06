@@ -149,8 +149,8 @@ __global__ void reduceMulAddComplete(float *v, float *w, float *g_odata,
 extern "C" float inner_product_gpu(float *v, float *w, unsigned int N)
 {
   float *bs, r;
-  const int nthreads = 1024;
-  int nblocks = N/nthreads +1;
+  const int nthreads = 1;
+  int nblocks = N/nthreads;
 
   // bs is only size 1 not size nblocks, this is because of the definition of atomic add
   CHECK(cudaMalloc((void **)&bs, sizeof(float))); 
@@ -197,7 +197,7 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
   int nthreads = 1;
   int N = pow(L, d);
   assert(N > nthreads);
-  int nblocks = N/nthreads +1;
+  int nblocks = N/nthreads;
   float reltol = 1e-6*norm(b, N);
   int i = 0;
   float *r = cuda_allocate_field(N);
@@ -267,10 +267,16 @@ extern "C" float conjugate_gradient_gpu(float * b, float * x , int L, int d)
     rr = rr_new;
     printf("residue: %f at iteration: %i\n", residue, i);
     i++;
+    printf("here\n");
   }
+  printf("here\n");
   cudaFree(r);
   cudaFree(Ap);
   cudaFree(p);
+  CHECK(cudaDeviceSynchronize());
+  printf("here 2\n");
+  printf("%f\n",residue);
+  // TODO this sometimes segfaults unexpectedly. I have no idea why. 
   return residue;
 }
 
