@@ -10,71 +10,44 @@
 #include "gpu_utils.cuh"
 #include "preconditioner_gpu.h"
 
-__global__ static void reduceAdd(float *g_idata, float *g_odata,
-                                 unsigned int n)
+
+int main()
 {
-  // set thread ID
-  unsigned int tid = threadIdx.x;
-  unsigned int gridSize = blockDim.x * 2 * gridDim.x;
-  unsigned int idx = blockIdx.x * blockDim.x * 2 + threadIdx.x;
+  // printf("%d\n",index_to_cords(10,3,2)); // 3x3x3 cube 
+  printf("%d\n",neighbour_index_gpu(0,1,1,3,3,3*3*3,0)); 
+  printf("%d\n",neighbour_index_gpu(3,1,1,3,3,3*3*3,0));
+  printf("%d\n",neighbour_index_gpu(6,1,1,3,3,3*3*3,0));
 
-  // add as many as possible (= 2*(n/gridSize))
-  float sum = 0.0;
-  int i = idx;
-  while (i < n)
-  {
-    sum += g_idata[i] + g_idata[i + blockDim.x];
-    i += gridSize;
-  }
-  g_idata[idx] = sum;
+  // printf("%d\n",neighbour_index_gpu(13,1,1,3,3,3*3*3,0)); // 3x3x3 cube (1,1,0) + (0,1,0)
+  // printf("%d\n",neighbour_index_gpu(16,1,1,3,3,3*3*3,0)); // 3x3x3 cube (1,2,0) + (0,1,0)
+  // printf("%d\n",neighbour_index_gpu(19,1,1,3,3,3*3*3,0)); // 3x3x3 cube (1,3,0) + (0,1,0)
+  // printf("%d\n",neighbour_index_gpu(22,1,1,3,3,3*3*3,0)); // 3x3x3 cube (1,4,0) + (0,1,0)
+  // printf("%d\n",neighbour_index_gpu(25,1,1,3,3,3*3*3,0)); // 3x3x3 cube (1,5,0) + (0,1,0)
+  // printf("%d\n",neighbour_index_gpu(10,1,-1,3,3,3*3*3,0)); // 3x3x3 cube (1,0,0) - (0,-1,0) => out of bounds
+  
+  test_inner_product();
+  test_laplace_square();
+  test_laplace_sin();
+  // TODO compare laplace to cpu version
 
-  __syncthreads();
 
-  // in-place reduction in global memory
-  for (int stride = blockDim.x / 2; stride > 0; stride /= 2)
-  {
-    if (tid < stride)
-    {
-      g_idata[idx] += g_idata[idx + stride];
-    }
-
-    // synchronize within threadblock
-    __syncthreads();
-  }
-
-  // write result for this block to global mem
-  if (tid == 0)
-    g_odata[blockIdx.x] = g_idata[idx];
-}
-
-__global__ void printArray_gpu(float *d_array, int size)
-{
-  int idx = threadIdx.x + blockIdx.x * blockDim.x;
-  if (idx < size)
-  {
-    printf("Array[%d] = %d\n", idx, d_array[idx]);
-  }
-}
-
-// julia wrapper functions
-extern "C"
-{
-
-  __global__ void add(float *A, float *B)
-  {
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    A[idx] += B[idx];
-    return;
-  }
-  void add_jl(float *A, float *B, int blocks, int threads)
-  {
-    add<<<blocks, threads>>>(A, B);
-  }
-
-  void laplace_gpu_jl(float *ddf, float *u, float dx, int d,
-                                   int L, int N, unsigned int index_mode,unsigned int blocks, unsigned int threads)
-  {
-    laplace_gpu<<<blocks,threads>>>(ddf,u,d,L,N,index_mode);
-    CHECK(cudaDeviceSynchronize());
-  }
+  // test conjugate gradient
+  int N = 100;
+  int L = N;
+  int d = 1;
+  float* x = cuda_allocate_field(N);
+  float* b = cuda_allocate_field(N);
+  fillArray<<<1,1024>>>(b,1,N);
+  // fillArray<<<1,1024>>>(x,0,N);
+  conjugate_gradient_gpu(b,x,L,d);
+  CHECK(cudaDeviceSynchronize());
+  float * xcpu = (float*)malloc(N*sizeof(float));
+  cudaMemcpy(xcpu,x,N*sizeof(float),cudaMemcpyDeviceToHost);
+  // for (int i = 0; i < N; i++)
+  // {
+  //   printf("%f ",xcpu[i]);
+  // }
+  cudaFree(x);
+  cudaFree(b);
+  free(xcpu);
 }
