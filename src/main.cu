@@ -37,8 +37,8 @@ void cg_ones(int L, int d, int N)
 int main()
 {
   int N = 100;
-  int L = N;
-  int d = 1;
+  int L = 10;
+  int d = 2;
 
   // TODO compare laplace to cpu version
 
@@ -58,14 +58,32 @@ int main()
     conjugate_gradient_gpu(q,z,L,d);
     // q = z/norm(z)
     float nz = norm(z,N);
+    // I know this is slow, because it is sequential, but the bulk of time is spent on cg anyways.
     for (int j = 0; j < N; j++)
     {
       q[j] = z[j]/nz;
     }
     lambda_min = inner_product_gpu(q,q,N);
   }
-  printf("lambda min %f",lambda_min);
+  printf("lambda min %f\n",lambda_min);
   
+  float lambda_max = 0;
+  for (int i = 0; i < itterations; i++)
+  {
+    // z = A q
+    laplace_gpu<<<nblocks, nthreads>>>(z, q, d, L, N, 0);
+    // q = z/norm(z)
+    float nz = norm(z,N);
+    // I know this is slow, because it is sequential, but the bulk of time is spent on cg anyways.
+    for (int j = 0; j < N; j++)
+    {
+      q[j] = z[j]/nz;
+    }
+    lambda_max = inner_product_gpu(q,q,N);
+  }
+  printf("lambda max %f\n", lambda_max);
+
+  // TODO: Does it make sense that both lambda min and max are 1?
 
   cudaFree(q);
   cudaFree(z);
