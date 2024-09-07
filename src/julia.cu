@@ -1,6 +1,5 @@
 #include "conjugate-gradient_gpu.cuh"
 
-
 // julia wrapper functions
 extern "C"
 {
@@ -17,11 +16,9 @@ extern "C"
   }
 
   void laplace_gpu_jl(float *ddf, float *u, float dx, int d,
-                                   int L, int N, unsigned int index_mode,unsigned int blocks, unsigned int threads)
+                      int L, int N, unsigned int index_mode, unsigned int blocks, unsigned int threads)
   {
-    laplace_gpu<<<blocks,threads>>>(ddf,u,d,L,N,index_mode);
+    laplace_gpu<<<blocks, threads>>>(ddf, u, d, L, N, index_mode);
     CHECK(cudaDeviceSynchronize());
   }
-
 }
-

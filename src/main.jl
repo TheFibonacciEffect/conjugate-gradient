@@ -43,11 +43,11 @@ function conjugate_gradient_gpu(b::CuArray{Float32}, x::CuArray{Float32}, L, d):
 end
 
 @testset "indexing on GPU" begin
-    @test neighbour_index_gpu(2,1,1,3,2,9,0) == 5
+    @test neighbour_index_gpu(2, 1, 1, 3, 2, 9, 0) == 5
     # edges
-    @test neighbour_index_gpu(2,0,1,3,2,9,0) == 9
-    @test neighbour_index_gpu(3,0,-1,3,2,9,0) == 9
-    
+    @test neighbour_index_gpu(2, 0, 1, 3, 2, 9, 0) == 9
+    @test neighbour_index_gpu(3, 0, -1, 3, 2, 9, 0) == 9
+
 end;
 
 Libdl.dlclose(lib) # Close the library explicitly.

@@ -20,17 +20,21 @@
  * @param N The total number of elements in the array.
  * @return The index of the point in the array.
  */
-int get_index(int *cords, int L, int d, int N) {
-  for (int c = 0; c < d; c++) {
+int get_index(int *cords, int L, int d, int N)
+{
+  for (int c = 0; c < d; c++)
+  {
     int cord = cords[c];
     assert(cord < L + 1 && cord > -2);
-    if (cord == -1 || cord == L) {
+    if (cord == -1 || cord == L)
+    {
       return N;
     }
   }
 
   int ind = 0;
-  for (int i = 0; i < d; i++) {
+  for (int i = 0; i < d; i++)
+  {
     ind += pow(L, i) * cords[i];
   }
   return ind;
@@ -48,7 +52,8 @@ int get_index(int *cords, int L, int d, int N) {
  * @return The index of the neighboring element.
  */
 int neighbour_index(int *cords, int direction, int amount, int L, int d,
-                    int N) {
+                    int N)
+{
   int copy_cords[d];
   memcpy(copy_cords, cords, d * sizeof(int));
   copy_cords[direction] += amount;
@@ -68,9 +73,11 @@ int neighbour_index(int *cords, int direction, int amount, int L, int d,
  * @param d The number of dimensions.
  * @return The modified `cords` array.
  */
-int *index_to_cords(int *cords, int index, int L, int d) {
+int *index_to_cords(int *cords, int index, int L, int d)
+{
   assert(index < pow(L, d) && index >= 0);
-  for (int i = 0; i < d; i++) {
+  for (int i = 0; i < d; i++)
+  {
     cords[i] = index % L;
     index /= L;
   }
@@ -87,12 +94,15 @@ int *index_to_cords(int *cords, int index, int L, int d) {
  * @param N - The total number of grid points.
  * @return Pointer to the array containing the Laplacian values.
  */
-double *minus_laplace(double *ddf, double *u, int d, int L, int N) {
-  for (int ind = 0; ind < N; ind++) {
+double *minus_laplace(double *ddf, double *u, int d, int L, int N)
+{
+  for (int ind = 0; ind < N; ind++)
+  {
     int cords[d];
     index_to_cords(cords, ind, L, d);
     double laplace_value = 0;
-    for (int i = 0; i < d; i++) {
+    for (int i = 0; i < d; i++)
+    {
       laplace_value += -u[neighbour_index(cords, i, 1, L, d, N)] +
                        2 * u[neighbour_index(cords, i, 0, L, d, N)] -
                        u[neighbour_index(cords, i, -1, L, d, N)];
@@ -109,17 +119,21 @@ double *minus_laplace(double *ddf, double *u, int d, int L, int N) {
  * @param n - The length of the vector.
  * @return The Euclidean norm of the vector.
  */
-double norm(double *x, int n) {
+double norm(double *x, int n)
+{
   double norm = 0;
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++)
+  {
     norm += x[i] * x[i];
   }
   return sqrt(norm);
 }
 
-double norm(const double *x, int n) {
+double norm(const double *x, int n)
+{
   double norm = 0;
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++)
+  {
     norm += x[i] * x[i];
   }
   return sqrt(norm);
@@ -133,9 +147,11 @@ double norm(const double *x, int n) {
  * @param n - The size of the arrays.
  * @return The inner product of the two arrays.
  */
-double inner_product(const double *x, const double *y, int n) {
+double inner_product(const double *x, const double *y, int n)
+{
   double product = 0;
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++)
+  {
     product += x[i] * y[i];
   }
   return product;
@@ -149,9 +165,12 @@ double inner_product(const double *x, const double *y, int n) {
  * @param A Pointer to the matrix array.
  * @param n The size of the matrix (n x n).
  */
-void print_matrix(double *A, int n) {
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n; j++) {
+void print_matrix(double *A, int n)
+{
+  for (int i = 0; i < n; i++)
+  {
+    for (int j = 0; j < n; j++)
+    {
       printf("%f ", A[i * n + j]);
     }
     printf("\n");
@@ -169,9 +188,11 @@ void print_matrix(double *A, int n) {
  * @param N The size of the field.
  * @return A pointer to the allocated memory.
  */
-double *allocate_field(int N) {
+double *allocate_field(int N)
+{
   double *r = (double *)calloc(N + 1, sizeof(double));
-  if (r == NULL) {
+  if (r == NULL)
+  {
     printf("Memory allocation failed");
     exit(1);
   }
@@ -192,17 +213,20 @@ double *allocate_field(int N) {
  * @param d The dimension of the grid.
  * @return The residue of the solution vector.
  */
-double conjugate_gradient(const double *b, double *x, int L, int d) {
+double conjugate_gradient(const double *b, double *x, int L, int d)
+{
   int N = pow(L, d);
   double *r = allocate_field(N);
   minus_laplace(x, x, d, L, N);
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++)
+  {
     r[i] = b[i] - x[i];
   }
   double tol = 1e-6 * norm(b, N);
   // p = r;
   double *p = allocate_field(N);
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++)
+  {
     p[i] = r[i];
   }
   double *Ap = allocate_field(N);
@@ -210,18 +234,20 @@ double conjugate_gradient(const double *b, double *x, int L, int d) {
   int n = 0;
   double rr = inner_product(r, r, N);
   double residue = norm(r, N);
-  while (residue > tol) {
-    
+  while (residue > tol)
+  {
 
     minus_laplace(Ap, p, d, L, N);
-    double alpha = rr / inner_product( p, Ap, N);
-    for (int i = 0; i < N; i++) {
+    double alpha = rr / inner_product(p, Ap, N);
+    for (int i = 0; i < N; i++)
+    {
       x[i] = x[i] + alpha * p[i];
       r[i] = r[i] - alpha * Ap[i];
     }
     double rr_new = inner_product(r, r, N);
     double beta = rr_new / rr;
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; i++)
+    {
       p[i] = r[i] + beta * p[i];
     }
     residue = sqrt(rr);
@@ -245,40 +271,47 @@ double conjugate_gradient(const double *b, double *x, int L, int d) {
  * @param errtol The error tolerance.
  * @return The residual of the preconditioner.
  */
-double preconditioner(double *b, double *x, int L, int d, double errtol) {
+double preconditioner(double *b, double *x, int L, int d, double errtol)
+{
   int N = pow(L, d);
   double *r = allocate_field(N);
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++)
+  {
     r[i] = b[i];
   }
   double tol = errtol * norm(b, N);
   // p = r;
   double *p = allocate_field(N);
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++)
+  {
     p[i] = r[i];
   }
   double *Ap = allocate_field(N);
   float dx = 2.0 / (L - 1);
   int i = 0;
-  for (int k = 0; k < N; k++) {
+  for (int k = 0; k < N; k++)
+  {
     x[k] = 0;
   }
   double res = norm(r, N);
   assert(x[0] == 0);
   double rr = NAN;
-  while (res > tol) {
+  while (res > tol)
+  {
     i++;
     minus_laplace(Ap, p, d, L, N);
     rr = inner_product(r, r, N);
     double alpha = rr / inner_product(p, Ap, N);
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; i++)
+    {
       x[i] = x[i] + alpha * p[i];
       r[i] = r[i] - alpha * Ap[i];
     }
     double rr_new = inner_product(r, r, N);
     double beta = rr_new / rr;
     rr = rr_new;
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; i++)
+    {
       p[i] = r[i] + beta * p[i];
     }
     res = norm(r, N);
@@ -298,13 +331,15 @@ double preconditioner(double *b, double *x, int L, int d, double errtol) {
  * @param d The number of dimensions.
  * @return The solution vector.
  */
-double *preconditioned_cg(double *b, double *x, int L, int d) {
+double *preconditioned_cg(double *b, double *x, int L, int d)
+{
   int N = pow(L, d);
   assert(N > 0);
   double *r = allocate_field(N);
   double *Ax = allocate_field(N);
   minus_laplace(Ax, x, d, L, N);
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++)
+  {
     r[i] = b[i] - Ax[i];
   }
   double tol = 1e-8 * norm(b, N);
@@ -316,20 +351,23 @@ double *preconditioned_cg(double *b, double *x, int L, int d) {
   double *Minv_r = Ax;
   double *Ap = Ax;
   double rMinvr;
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++)
+  {
     Minv_r[i] = p[i];
   }
   rMinvr = inner_product(r, Minv_r, N);
   double r_newMinvr_new;
   int i = 0;
   int maxitter = 1000;
-  while (i < maxitter) {
+  while (i < maxitter)
+  {
     i++;
     minus_laplace(Ap, p, d, L, N);
     double alpha =
         rMinvr /
         inner_product(p, Ap, N);
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; i++)
+    {
       x[i] = x[i] + alpha * p[i];
       r[i] = r[i] - alpha * Ap[i];
     }
@@ -338,7 +376,8 @@ double *preconditioned_cg(double *b, double *x, int L, int d) {
     preconditioner(r, Minv_r_new, L, d, 1e-3);
     r_newMinvr_new = inner_product(r, Minv_r_new, N);
     double beta = r_newMinvr_new / rMinvr;
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; i++)
+    {
       p[i] = Minv_r_new[i] + beta * p[i];
     }
     rMinvr = r_newMinvr_new;

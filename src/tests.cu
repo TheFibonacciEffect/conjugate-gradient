@@ -11,9 +11,11 @@
 // TESTS
 float square(float x, float y) { return (x * x + y * y) / 4; }
 
-bool every_a(double *x, double *y, int n) {
+bool every_a(double *x, double *y, int n)
+{
   double tol = 1e-3;
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++)
+  {
     if (!(fabs(x[i] - y[i]) < tol)) // floating point comparison also accounting
                                     // for NaNs that always return false
     {
@@ -23,10 +25,12 @@ bool every_a(double *x, double *y, int n) {
   return true;
 }
 
-bool every_a(float *x, float *y, int n) {
+bool every_a(float *x, float *y, int n)
+{
   printf("calling every a");
   float tol = 1e-3;
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++)
+  {
     if (!(fabs(x[i] - y[i]) < tol)) // floating point comparison also accounting
                                     // for NaNs that always return false
     {
@@ -36,23 +40,28 @@ bool every_a(float *x, float *y, int n) {
   return true;
 }
 
-double *random_array(double *r, int L, int d, int N) {
+double *random_array(double *r, int L, int d, int N)
+{
   // double* r = allocate_field(N);
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++)
+  {
     r[i] = (double)rand() / (double)RAND_MAX;
   }
   return r;
 }
 
-float *random_array(float *r, int L, int d, int N) {
+float *random_array(float *r, int L, int d, int N)
+{
   // float* r = allocate_field(N);
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++)
+  {
     r[i] = (float)rand() / (float)RAND_MAX;
   }
   return r;
 }
 
-bool test_cg(int L, int d, int N) {
+bool test_cg(int L, int d, int N)
+{
   printf("testing cg\n");
   // allocate an array
   double dx = 2.0 / (L - 1);
@@ -64,16 +73,20 @@ bool test_cg(int L, int d, int N) {
   b = minus_laplace(b, x, d, L, N);
   // initial guess
   double *x0 = allocate_field(N);
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++)
+  {
     x0[i] = 0;
   }
   // apply conjugate gradient to calculate x
   conjugate_gradient(b, x0, L, d);
   // compare with x
   bool passed = false;
-  if (every_a(x, x0, N)) {
+  if (every_a(x, x0, N))
+  {
     passed = true;
-  } else {
+  }
+  else
+  {
     passed = false;
   }
   free(x);
@@ -83,7 +96,8 @@ bool test_cg(int L, int d, int N) {
   return passed;
 }
 
-bool test_preconditioner(int L, int d, int N) {
+bool test_preconditioner(int L, int d, int N)
+{
   // allocate an array
   double dx = 2.0 / (L - 1);
   double *x = allocate_field(N);
@@ -94,16 +108,20 @@ bool test_preconditioner(int L, int d, int N) {
   b = minus_laplace(b, x, d, L, N);
   // initial guess
   double *x0 = allocate_field(N);
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++)
+  {
     x0[i] = 0;
   }
   // apply conjugate gradient to calculate x
   preconditioner(b, x0, L, d, 1e-6);
   // compare with x
   bool passed = false;
-  if (every_a(x, x0, N)) {
+  if (every_a(x, x0, N))
+  {
     passed = true;
-  } else {
+  }
+  else
+  {
     passed = false;
   }
   free(x);
@@ -112,7 +130,8 @@ bool test_preconditioner(int L, int d, int N) {
   return passed;
 }
 
-bool test_preconditioned_cg(int L, int d, int N) {
+bool test_preconditioned_cg(int L, int d, int N)
+{
   // allocate an array
   double dx = 2.0 / (L - 1);
   double *x = allocate_field(N);
@@ -123,16 +142,20 @@ bool test_preconditioned_cg(int L, int d, int N) {
   b = minus_laplace(b, x, d, L, N);
   // initial guess
   double *x0 = allocate_field(N);
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++)
+  {
     x0[i] = 0;
   }
   // apply conjugate gradient to calculate x
   x0 = preconditioned_cg(b, x0, L, d);
   // compare with x
   bool passed = false;
-  if (every_a(x, x0, N)) {
+  if (every_a(x, x0, N))
+  {
     passed = true;
-  } else {
+  }
+  else
+  {
     passed = false;
   }
   free(x);
@@ -141,16 +164,20 @@ bool test_preconditioned_cg(int L, int d, int N) {
   return passed;
 }
 
-bool is_boundary(int *cords, int L, int d) {
-  for (int i = 0; i < d; i++) {
-    if (cords[i] == 0 || cords[i] == L - 1) {
+bool is_boundary(int *cords, int L, int d)
+{
+  for (int i = 0; i < d; i++)
+  {
+    if (cords[i] == 0 || cords[i] == L - 1)
+    {
       return true;
     }
   }
   return false;
 }
 
-bool test_laplace() {
+bool test_laplace()
+{
   int L = 5;
   int d = 2;
   int N = pow(L, d);
@@ -159,7 +186,8 @@ bool test_laplace() {
   double x, y;
   double *u = allocate_field(N);
   u[N] = 0;
-  for (i = 0; i < N; i++) {
+  for (i = 0; i < N; i++)
+  {
     int cords[2];
     index_to_cords(cords, i, L, d);
     int nx = cords[0];
@@ -171,7 +199,8 @@ bool test_laplace() {
   double *ddf = allocate_field(N);
   ddf = minus_laplace(ddf, u, d, L, N);
 
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++)
+  {
     int cords[2];
     index_to_cords(cords, i, L, d);
     int nx = cords[0];
@@ -179,7 +208,8 @@ bool test_laplace() {
     x = -1 + nx * dx;
     y = -1 + ny * dx;
     if (!is_boundary(cords, L, d) &&
-        !(ddf[i] - 1 > 1e-3 || ddf[i] - 1 < -1e-3)) {
+        !(ddf[i] - 1 > 1e-3 || ddf[i] - 1 < -1e-3))
+    {
       printf("Test failed\n");
       printf("x: %f, y: %f, ddf: %f\n", x, y, ddf[i]);
       return false;
@@ -190,69 +220,81 @@ bool test_laplace() {
   return true;
 }
 
-bool run_test_gc_cpu() {
+bool run_test_gc_cpu()
+{
   int L = 5;
   int d = 3;
   int N = pow(L, d);
   return test_cg(L, d, N);
 }
 
-bool test_inner_product() {
+bool test_inner_product()
+{
   double x[3] = {1, 2, 3};
   double y[3] = {4, 5, 6};
   double result = inner_product(x, y, 3);
-  if (result - 32 > 1e-3 || result - 32 < -1e-3) {
+  if (result - 32 > 1e-3 || result - 32 < -1e-3)
+  {
     return false;
   }
   return true;
 }
 
-bool test_norm() {
+bool test_norm()
+{
   double x[3] = {1, 2, 3};
   double result = norm(x, 3);
-  if (result - sqrt(14) > 1e-3 || result - sqrt(14) < -1e-3) {
+  if (result - sqrt(14) > 1e-3 || result - sqrt(14) < -1e-3)
+  {
     return false;
   }
   return true;
 }
 
-bool test_getindex() {
+bool test_getindex()
+{
   int cords[2] = {1, 2};
   int L = 5;
   int d = 2;
   int N = pow(L, d);
   int result = get_index(cords, L, d, N);
-  if (result != 11) {
+  if (result != 11)
+  {
     return false;
   }
   return true;
 }
 
-bool test_getindex_edge() {
+bool test_getindex_edge()
+{
   int cords[2] = {5, 5}; // outside the array
   int L = 5;
   int d = 2;
   int N = pow(L, d);
   int result = get_index(cords, L, d, N);
-  if (result != N) {
+  if (result != N)
+  {
     return false;
   }
   return true;
 }
 
-bool test_getindex_edge2() {
+bool test_getindex_edge2()
+{
   int cords[2] = {-1, 0}; // outside the array
   int L = 5;
   int d = 2;
   int N = pow(L, d);
   int result = get_index(cords, L, d, N);
-  if (result != N) {
+  if (result != N)
+  {
     return false;
   }
   return true;
 }
 
-bool test_neighbour_index() {
+bool test_neighbour_index()
+{
   int cords[2] = {0, 2};
   int direction = 1;
   int amount = -1;
@@ -260,13 +302,15 @@ bool test_neighbour_index() {
   int d = 2;
   int N = pow(L, d);
   int result = neighbour_index(cords, direction, amount, L, d, N);
-  if (result != 5) {
+  if (result != 5)
+  {
     return false;
   }
   return true;
 }
 
-bool test_neighbour_index2() {
+bool test_neighbour_index2()
+{
   int cords[2] = {1, 2};
   int direction = 1;
   int amount = -1;
@@ -274,14 +318,15 @@ bool test_neighbour_index2() {
   int d = 2;
   int N = pow(L, d);
   int result = neighbour_index(cords, direction, amount, L, d, N);
-  if (result != 6) {
+  if (result != 6)
+  {
     return false;
   }
   return true;
 }
 
-
-extern int run_tests_cpu() {
+extern int run_tests_cpu()
+{
   printf("running tests");
   assert(test_laplace());
   assert(test_inner_product());
@@ -301,51 +346,60 @@ extern int run_tests_cpu() {
 // Tests for GPU
 #include "conjugate-gradient_gpu.cuh"
 
-__global__ void squareKernel(float *d_array, int n, float step) {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx < n) {
-        float x = -M_PI + idx * step;
-        d_array[idx] = x * x;
-    }
+__global__ void squareKernel(float *d_array, int n, float step)
+{
+  int idx = blockDim.x * blockIdx.x + threadIdx.x;
+  if (idx < n)
+  {
+    float x = -M_PI + idx * step;
+    d_array[idx] = x * x;
+  }
 }
 
-__global__ void sinKernel(float *d_array, int n, float step) {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx < n) {
-        float x = -M_PI + idx * step;
-        d_array[idx] = sin(x);
-    }
+__global__ void sinKernel(float *d_array, int n, float step)
+{
+  int idx = blockDim.x * blockIdx.x + threadIdx.x;
+  if (idx < n)
+  {
+    float x = -M_PI + idx * step;
+    d_array[idx] = sin(x);
+  }
 }
 
 static void test_inner_product_gpu()
 {
   int N = 1000;
-  float* x = cuda_allocate_field(N);
-  fillArray<<<1,1024>>>(x,1,N);
-  float r = inner_product_gpu(x,x,N);
-  printf("x*x =%f\n",r);
-  assert(r==N);
+  float *x = cuda_allocate_field(N);
+  fillArray<<<1, 1024>>>(x, 1, N);
+  float r = inner_product_gpu(x, x, N);
+  printf("x*x =%f\n", r);
+  assert(r == N);
   cudaFree(x);
 }
 
 // CUDA kernel to perform element-wise division
-__global__ void div(float *d_array1, float *d_array2, float *d_result, int n) {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx < n) {
-        if (d_array2[idx] != 0) {  // Check to avoid division by zero
-            d_result[idx] = d_array1[idx] / d_array2[idx];
-        } else {
-            d_result[idx] = NAN;
-        }
+__global__ void div(float *d_array1, float *d_array2, float *d_result, int n)
+{
+  int idx = blockDim.x * blockIdx.x + threadIdx.x;
+  if (idx < n)
+  {
+    if (d_array2[idx] != 0)
+    { // Check to avoid division by zero
+      d_result[idx] = d_array1[idx] / d_array2[idx];
     }
+    else
+    {
+      d_result[idx] = NAN;
+    }
+  }
 }
 
 static void test_laplace_square()
 {
   int N = 1000;
   float step = (2 * M_PI) / (N - 1);
-  float * ddf = cuda_allocate_field(N);
-  float * u = cuda_allocate_field(N);
+  float *ddf = cuda_allocate_field(N);
+  float *u = cuda_allocate_field(N);
   int threadsPerBlock = 256;
   int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
 
@@ -355,14 +409,14 @@ static void test_laplace_square()
 
   squareKernel<<<blocksPerGrid, threadsPerBlock>>>(u, N, step);
   CHECK(cudaDeviceSynchronize());
-  laplace_gpu<<<blocksPerGrid,threadsPerBlock>>>(ddf,u,d,L,N,index_mode);
+  laplace_gpu<<<blocksPerGrid, threadsPerBlock>>>(ddf, u, d, L, N, index_mode);
   CHECK(cudaDeviceSynchronize());
-  float * ddf_c = (float*)malloc(N*sizeof(float));
-  cudaMemcpy(ddf_c,ddf,N*sizeof(float),cudaMemcpyDeviceToHost);
-  for (int i = 1; i < N-1; i++) // all except boundary
+  float *ddf_c = (float *)malloc(N * sizeof(float));
+  cudaMemcpy(ddf_c, ddf, N * sizeof(float), cudaMemcpyDeviceToHost);
+  for (int i = 1; i < N - 1; i++) // all except boundary
   {
     // printf("%f ",ddf_c[i] -  ddf_c[N/2]); // all the same value
-    assert(abs(ddf_c[i] - ddf_c[N/2]) < 1e-3);
+    assert(abs(ddf_c[i] - ddf_c[N / 2]) < 1e-3);
   }
   cudaFree(ddf);
   cudaFree(u);
@@ -372,8 +426,8 @@ static void test_laplace_sin()
 {
   int N = 1000;
   float step = (2 * M_PI) / (N - 1);
-  float * ddf = cuda_allocate_field(N);
-  float * u = cuda_allocate_field(N);
+  float *ddf = cuda_allocate_field(N);
+  float *u = cuda_allocate_field(N);
   int threadsPerBlock = 256;
   int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
 
@@ -383,22 +437,23 @@ static void test_laplace_sin()
 
   sinKernel<<<blocksPerGrid, threadsPerBlock>>>(u, N, step);
   CHECK(cudaDeviceSynchronize());
-  laplace_gpu<<<blocksPerGrid,threadsPerBlock>>>(ddf,u,d,L,N,index_mode);
+  laplace_gpu<<<blocksPerGrid, threadsPerBlock>>>(ddf, u, d, L, N, index_mode);
   CHECK(cudaDeviceSynchronize());
-  div<<<blocksPerGrid,threadsPerBlock>>>(ddf,u,ddf,N);
+  div<<<blocksPerGrid, threadsPerBlock>>>(ddf, u, ddf, N);
   CHECK(cudaDeviceSynchronize());
-  float * ddf_c = (float*)malloc(N*sizeof(float));
-  cudaMemcpy(ddf_c,ddf,N*sizeof(float),cudaMemcpyDeviceToHost);
-  for (int i = 1; i < N-1; i++) // all except boundary
+  float *ddf_c = (float *)malloc(N * sizeof(float));
+  cudaMemcpy(ddf_c, ddf, N * sizeof(float), cudaMemcpyDeviceToHost);
+  for (int i = 1; i < N - 1; i++) // all except boundary
   {
     // printf("%f ",ddf_c[i] -  ddf_c[N/2]); // all the same value
-    assert(abs(ddf_c[i] - ddf_c[N/2]) < 1e-3);
+    assert(abs(ddf_c[i] - ddf_c[N / 2]) < 1e-3);
   }
   cudaFree(ddf);
   cudaFree(u);
 }
 
-bool test_cg_gpu(int L, int d, int N) {
+bool test_cg_gpu(int L, int d, int N)
+{
   int nblocks = N;
   int nthreads = 1;
   printf("testing cg\n");
@@ -408,19 +463,23 @@ bool test_cg_gpu(int L, int d, int N) {
   // fill it with random data
   random_array(x, L, d, N);
   // calculate b
-  laplace_gpu<<<nblocks, nthreads>>>(b, x, d, L, N,1);
+  laplace_gpu<<<nblocks, nthreads>>>(b, x, d, L, N, 1);
   // initial guess
   float *x0 = cuda_allocate_field(N);
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++)
+  {
     x0[i] = 0;
   }
   // apply conjugate gradient to calculate x
   conjugate_gradient_gpu(b, x0, L, d);
   // compare with x
   bool passed = false;
-  if (every_a(x, x0, N)) {
+  if (every_a(x, x0, N))
+  {
     passed = true;
-  } else {
+  }
+  else
+  {
     passed = false;
   }
   cudaFree(x);
@@ -433,32 +492,30 @@ bool test_cg_gpu(int L, int d, int N) {
 // tests for interleaved indexing
 #include "interleave.cuh"
 
-
 int main(int argc, char const *argv[])
 {
-  // // CPU Tests
-  // printf("running cpu tests\n");
-  // // Redirect stdout to /dev/null
-  // FILE *tmp = stdout;
-  // stdout = fopen("/dev/null", "w");
+  // CPU Tests
+  printf("running cpu tests\n");
+  // Redirect stdout to /dev/null
+  FILE *tmp = stdout;
+  stdout = fopen("/dev/null", "w");
 
-  // run_tests_cpu();
-  // stdout = tmp;
-  
-  // // GPU tests
-  // printf("running gpu tests\n");
+  run_tests_cpu();
+  stdout = tmp;
 
-  // stdout = fopen("/dev/null", "w");
+  // GPU tests
+  printf("running gpu tests\n");
 
-  // test_inner_product_gpu();
-  // test_laplace_sin();
-  // test_laplace_square();
+  stdout = fopen("/dev/null", "w");
 
-  // stdout = tmp;
+  test_inner_product_gpu();
+  test_laplace_sin();
+  test_laplace_square();
 
-  // printf("testing inteleaved indexing \n");
-  assert(test_cg_gpu(10,2,100));
+  stdout = tmp;
 
+  printf("testing inteleaved indexing \n");
+  assert(test_cg_gpu(10, 2, 100));
 
   tests_interleaved_index();
 
@@ -466,4 +523,3 @@ int main(int argc, char const *argv[])
 
   return 0;
 }
-

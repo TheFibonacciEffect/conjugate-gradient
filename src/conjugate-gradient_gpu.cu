@@ -13,14 +13,16 @@
  * @param value The value to fill the array with.
  * @param size The size of the array.
  */
-__global__ void fillArray(float* arr, float value, int size) {
-    // Calculate the global thread index
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    
-    // Check if within bounds
-    if (idx < size) {
-        arr[idx] = value;
-    }
+__global__ void fillArray(float *arr, float value, int size)
+{
+  // Calculate the global thread index
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+  // Check if within bounds
+  if (idx < size)
+  {
+    arr[idx] = value;
+  }
 }
 /**
  * @brief Allocates a managed CUDA memory for a float field of size N.
@@ -29,12 +31,11 @@ __global__ void fillArray(float* arr, float value, int size) {
  * @return A pointer to the allocated memory.
  */
 
-
 __host__ float *cuda_allocate_field(int N)
 {
   float *field;
   CHECK(cudaMallocManaged(&field, (N + 1) * sizeof(float)));
-  fillArray<<<1,N>>>(field,0,N);
+  fillArray<<<1, N>>>(field, 0, N);
   field[N] = 0;
   cudaDeviceSynchronize();
   return field;
@@ -53,7 +54,8 @@ __host__ float *cuda_allocate_field(int N)
  * @param d The number of dimensions.
  * @return The array containing the resulting coordinates.
  */
-__device__ int *index_to_cords_cu(int *cords, int index, int L, int d) {
+__device__ int *index_to_cords_cu(int *cords, int index, int L, int d)
+{
   assert(index < pow(L, d) && index >= 0);
   for (int i = 0; i < d; i++)
   {
@@ -76,7 +78,8 @@ __device__ int *index_to_cords_cu(int *cords, int index, int L, int d) {
  * @param N The total number of elements in the flattened array.
  * @return The index in the flattened array.
  */
-__device__ int get_index_gpu(int *cords, int L, int d, int N) {
+__device__ int get_index_gpu(int *cords, int L, int d, int N)
+{
   int index = 0;
   for (int i = 0; i < d; i++)
   {
@@ -101,8 +104,10 @@ __device__ int get_index_gpu(int *cords, int L, int d, int N) {
  * @param d The number of dimensions.
  * @return The coordinates of the index in the grid.
  */
-static inline __device__ __host__ int index_to_cords(int index, int L, int d) {
-  for (int i = 0; i < d; i++) {
+static inline __device__ __host__ int index_to_cords(int index, int L, int d)
+{
+  for (int i = 0; i < d; i++)
+  {
     index /= L;
   }
   return index % L;
@@ -122,7 +127,8 @@ static inline __device__ __host__ int index_to_cords(int index, int L, int d) {
  */
 extern "C" __host__ __device__ int neighbour_index_gpu(int ind, int direction,
                                                        int amount, int L, int d,
-                                                       int N, int index_mode) {
+                                                       int N, int index_mode)
+{
   // should be consistant with cpu code
   int cord = index_to_cords(ind, L, direction);
   cord += amount;
@@ -131,13 +137,13 @@ extern "C" __host__ __device__ int neighbour_index_gpu(int ind, int direction,
 
   // if on boundary => return 0 through special index
   assert(amount == 1 || amount == -1 || amount == 0);
-  int n=1;
-  for (int i=0; i<direction; i++)
+  int n = 1;
+  for (int i = 0; i < direction; i++)
   {
-      n *= L;
+    n *= L;
   }
-  ind += amount*n;
-  
+  ind += amount * n;
+
   return ind;
 }
 
@@ -156,19 +162,18 @@ extern "C" __host__ __device__ int neighbour_index_gpu(int ind, int direction,
  * @param index_mode - Indexing mode for accessing neighbouring elements.
  */
 __global__ void laplace_gpu(float *ddf, float *u, int d, int L, int N,
-                            unsigned int index_mode) {
+                            unsigned int index_mode)
+{
   int ind = blockIdx.x * blockDim.x + threadIdx.x;
   if (ind < N)
   {
     float laplace_value = 0;
     for (int i = 0; i < d; i++)
     {
-      laplace_value += - u[neighbour_index_gpu(ind, i, 1, L, d, N, index_mode)]
-                       + 2 * u[neighbour_index_gpu(ind, i, 0, L, d, N, index_mode)]
-                       - u[neighbour_index_gpu(ind, i, -1, L, d, N, index_mode)];
+      laplace_value += -u[neighbour_index_gpu(ind, i, 1, L, d, N, index_mode)] + 2 * u[neighbour_index_gpu(ind, i, 0, L, d, N, index_mode)] - u[neighbour_index_gpu(ind, i, -1, L, d, N, index_mode)];
     }
     // the discrete version is defined without dx
-    ddf[ind] = laplace_value; 
+    ddf[ind] = laplace_value;
   }
 }
 /**
@@ -185,7 +190,7 @@ __global__ void laplace_gpu(float *ddf, float *u, int d, int L, int N,
  */
 
 __global__ void reduceMulAddComplete(float *v, float *w, float *g_odata,
-                                            unsigned int n,const unsigned int nthreads)
+                                     unsigned int n, const unsigned int nthreads)
 {
   // set thread ID
   unsigned int tid = threadIdx.x;
@@ -200,7 +205,7 @@ __global__ void reduceMulAddComplete(float *v, float *w, float *g_odata,
   int i = idx;
   while (i < n)
   {
-    sum += v[i]* w[i] + v[i + blockDim.x]* w[i + blockDim.x];
+    sum += v[i] * w[i] + v[i + blockDim.x] * w[i + blockDim.x];
     i += gridSize;
   }
   tmp[tid] = sum;
@@ -232,15 +237,16 @@ __global__ void reduceMulAddComplete(float *v, float *w, float *g_odata,
  * @param N The size of the arrays.
  * @return The inner product of the two arrays.
  */
-extern "C" float inner_product_gpu(float *v, float *w, unsigned int N) {
+extern "C" float inner_product_gpu(float *v, float *w, unsigned int N)
+{
   float *bs, r;
   const int nthreads = 1;
-  int nblocks = N/nthreads;
+  int nblocks = N / nthreads;
 
   // bs is only size 1 not size nblocks, this is because of the definition of atomic add
-  CHECK(cudaMalloc((void **)&bs, sizeof(float))); 
+  CHECK(cudaMalloc((void **)&bs, sizeof(float)));
 
-  reduceMulAddComplete<<<nblocks, nthreads, nthreads*sizeof(float)>>>(v, w, bs, N, nthreads);
+  reduceMulAddComplete<<<nblocks, nthreads, nthreads * sizeof(float)>>>(v, w, bs, N, nthreads);
   CHECK(cudaDeviceSynchronize());
   CHECK(cudaMemcpy(&r, bs, sizeof(float), cudaMemcpyDeviceToHost));
 
@@ -259,7 +265,8 @@ extern "C" float inner_product_gpu(float *v, float *w, unsigned int N) {
  * @param N The size of the vector.
  * @return The norm of the vector.
  */
-__host__ float norm(float *v, int N) {
+__host__ float norm(float *v, int N)
+{
   return sqrt(inner_product_gpu(v, v, N));
 }
 
@@ -275,27 +282,30 @@ __host__ float norm(float *v, int N) {
  *
  * @return void
  */
-void tests() {
+void tests()
+{
   // index
-  assert(index_to_cords(4,3,1) == 1);
-  assert(index_to_cords(2,3,1) == 0);
-  assert(index_to_cords(2,3,0) == 2);
+  assert(index_to_cords(4, 3, 1) == 1);
+  assert(index_to_cords(2, 3, 1) == 0);
+  assert(index_to_cords(2, 3, 0) == 2);
 }
 
 // A = b*B
-__global__ void muladd(float* A, float b, float* B, int N)
+__global__ void muladd(float *A, float b, float *B, int N)
 {
   int ind = blockIdx.x * blockDim.x + threadIdx.x;
-  if (ind >= N) return;
-  A[ind] = A[ind] + b*B[ind];
+  if (ind >= N)
+    return;
+  A[ind] = A[ind] + b * B[ind];
 }
 
 // A = C + b*B
-__global__ void muladd3(float* A, float * C, float b, float* B, int N)
+__global__ void muladd3(float *A, float *C, float b, float *B, int N)
 {
   int ind = blockIdx.x * blockDim.x + threadIdx.x;
-  if (ind >= N) return;
-  A[ind] = C[ind] + b*B[ind];
+  if (ind >= N)
+    return;
+  A[ind] = C[ind] + b * B[ind];
 }
 
 /**
@@ -315,26 +325,27 @@ __global__ void muladd3(float* A, float * C, float b, float* B, int N)
  * @param d The number of dimensions.
  * @return The residue of the solution.
  */
-extern "C" float conjugate_gradient_gpu(float *b, float *x, int L, int d) {
+extern "C" float conjugate_gradient_gpu(float *b, float *x, int L, int d)
+{
   int nthreads = 1;
   int N = pow(L, d);
   assert(N > nthreads);
-  int nblocks = N/nthreads;
-  float reltol = 1e-6*norm(b, N);
+  int nblocks = N / nthreads;
+  float reltol = 1e-6 * norm(b, N);
   int i = 0;
   float *r = cuda_allocate_field(N);
-  muladd<<<nblocks,nthreads>>>(r,1,b,N); //assume r=0
+  muladd<<<nblocks, nthreads>>>(r, 1, b, N); // assume r=0
   cudaDeviceSynchronize();
   float *Ap = cuda_allocate_field(N);
   float *p = cuda_allocate_field(N);
   // p = r
-  muladd<<<nblocks,nthreads>>>(p,1,r,N); //assume p=0
+  muladd<<<nblocks, nthreads>>>(p, 1, r, N); // assume p=0
   cudaDeviceSynchronize();
   float rr = inner_product_gpu(r, r, N);
   float rr_new = rr;
   float alpha = NAN;
-  float residue = norm(r,N);
-  float beta = 0; 
+  float residue = norm(r, N);
+  float beta = 0;
   while (residue > reltol)
   {
 
@@ -349,7 +360,7 @@ extern "C" float conjugate_gradient_gpu(float *b, float *x, int L, int d) {
     beta = rr_new / rr;
 
     cudaDeviceSynchronize();
-    muladd3<<<nblocks, nthreads>>>(p,r, beta, p, N);
+    muladd3<<<nblocks, nthreads>>>(p, r, beta, p, N);
     cudaDeviceSynchronize();
     CHECK(cudaDeviceSynchronize());
     residue = sqrt(rr);
@@ -362,5 +373,3 @@ extern "C" float conjugate_gradient_gpu(float *b, float *x, int L, int d) {
   CHECK(cudaDeviceSynchronize());
   return residue;
 }
-
-
