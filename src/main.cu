@@ -61,9 +61,9 @@ int main()
     // I know this is slow, because it is sequential, but the bulk of time is spent on cg anyways.
     for (int j = 0; j < N; j++)
     {
-      q[j] = z[j]/nz;
+      z[j] = z[j]/nz;
     }
-    lambda_min = inner_product_gpu(q,q,N);
+    lambda_min = inner_product_gpu(q,z,N)/inner_product_gpu(q,q,N);
   }
   printf("lambda min %f\n",lambda_min);
   
@@ -77,9 +77,9 @@ int main()
     // I know this is slow, because it is sequential, but the bulk of time is spent on cg anyways.
     for (int j = 0; j < N; j++)
     {
-      q[j] = z[j]/nz;
+      z[j] = z[j]/nz;
     }
-    lambda_max = inner_product_gpu(q,q,N);
+    lambda_max = inner_product_gpu(q,z,N)/inner_product_gpu(q,q,N);
   }
   printf("lambda max %f\n", lambda_max);
 
