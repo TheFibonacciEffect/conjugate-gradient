@@ -40,25 +40,6 @@ bool every_a(float *x, float *y, int n)
   return true;
 }
 
-double *random_array(double *r, int L, int d, int N)
-{
-  // double* r = allocate_field(N);
-  for (int i = 0; i < N; i++)
-  {
-    r[i] = (double)rand() / (double)RAND_MAX;
-  }
-  return r;
-}
-
-float *random_array(float *r, int L, int d, int N)
-{
-  // float* r = allocate_field(N);
-  for (int i = 0; i < N; i++)
-  {
-    r[i] = (float)rand() / (float)RAND_MAX;
-  }
-  return r;
-}
 
 bool test_cg(int L, int d, int N)
 {

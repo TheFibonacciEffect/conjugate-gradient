@@ -390,3 +390,14 @@ double *preconditioned_cg(double *b, double *x, int L, int d)
   free(p);
   return x;
 }
+
+double *random_array(double *r, int L, int d, int N)
+{
+  // double* r = allocate_field(N);
+  for (int i = 0; i < N; i++)
+  {
+    r[i] = (double)rand() / (double)RAND_MAX;
+  }
+  return r;
+}
+

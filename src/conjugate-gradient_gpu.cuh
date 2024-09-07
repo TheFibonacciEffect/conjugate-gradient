@@ -35,3 +35,4 @@ __host__ float norm(float *v, int N);
 extern "C" float conjugate_gradient_gpu(float *b, float *x, int L, int d);
 
 __global__ void fillArray(float *arr, float value, int size);
+float *random_array(float *r, int L, int d, int N);

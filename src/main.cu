@@ -39,31 +39,34 @@ int main()
   int N = 100;
   int L = N;
   int d = 1;
-  // run on cpu
-  // for demonstration
-  cg_ones(L, d, N);
-
-  // printf("%d\n",index_to_cords(10,3,2)); // 3x3x3 cube
-  printf("%d\n", neighbour_index_gpu(0, 1, 1, 3, 3, 3 * 3 * 3, 0));
-  printf("%d\n", neighbour_index_gpu(3, 1, 1, 3, 3, 3 * 3 * 3, 0));
-  printf("%d\n", neighbour_index_gpu(6, 1, 1, 3, 3, 3 * 3 * 3, 0));
 
   // TODO compare laplace to cpu version
 
-  // test conjugate gradient
-  float *x = cuda_allocate_field(N);
-  float *b = cuda_allocate_field(N);
-  fillArray<<<1, 1024>>>(b, 1, N);
-  // fillArray<<<1,1024>>>(x,0,N);
-  conjugate_gradient_gpu(b, x, L, d);
-  CHECK(cudaDeviceSynchronize());
-  float *xcpu = (float *)malloc(N * sizeof(float));
-  cudaMemcpy(xcpu, x, N * sizeof(float), cudaMemcpyDeviceToHost);
-  // for (int i = 0; i < N; i++)
-  // {
-  //   printf("%f ",xcpu[i]);
-  // }
-  cudaFree(x);
-  cudaFree(b);
-  free(xcpu);
+  // find the smallest and largest eigenvalue
+  int nblocks = N;
+  int nthreads = 1;
+  // allocate an array
+  float *z = cuda_allocate_field(N);
+  float *q = cuda_allocate_field(N);
+  // fill it with random data
+  random_array(q, L, d, N);
+  float lambda_min = 0;
+  int itterations = 100;
+  for (int i = 0; i < itterations; i++)
+  {
+    // z = Ainv q
+    conjugate_gradient_gpu(q,z,L,d);
+    // q = z/norm(z)
+    float nz = norm(z,N);
+    for (int j = 0; j < N; j++)
+    {
+      q[j] = z[j]/nz;
+    }
+    lambda_min = inner_product_gpu(q,q,N);
+  }
+  printf("lambda min %f",lambda_min);
+  
+
+  cudaFree(q);
+  cudaFree(z);
 }

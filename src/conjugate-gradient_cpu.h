@@ -13,3 +13,4 @@ int *index_to_cords(int *cords, int index, int L, int d);
 double norm(double *x, int n);
 int get_index(int *cords, int L, int d, int N);
 int neighbour_index(int *cords, int direction, int amount, int L, int d, int N);
+double *random_array(double *r, int L, int d, int N);

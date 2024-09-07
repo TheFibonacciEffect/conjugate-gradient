@@ -373,3 +373,13 @@ extern "C" float conjugate_gradient_gpu(float *b, float *x, int L, int d)
   CHECK(cudaDeviceSynchronize());
   return residue;
 }
+
+float *random_array(float *r, int L, int d, int N)
+{
+  // float* r = allocate_field(N);
+  for (int i = 0; i < N; i++)
+  {
+    r[i] = (float)rand() / (float)RAND_MAX;
+  }
+  return r;
+}
