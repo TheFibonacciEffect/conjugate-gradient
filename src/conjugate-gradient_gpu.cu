@@ -1,4 +1,4 @@
-#include "gpu_utils.cuh"
+#include "conjugate-gradient_gpu.cuh"
 #include "conjugate-gradient_cpu.h"
 
 

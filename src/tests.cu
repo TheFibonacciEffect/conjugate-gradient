@@ -299,7 +299,7 @@ extern int run_tests_cpu() {
 }
 
 // Tests for GPU
-#include "gpu_utils.cuh"
+#include "conjugate-gradient_gpu.cuh"
 
 __global__ void squareKernel(float *d_array, int n, float step) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;

@@ -7,7 +7,7 @@
 // #include <math.h>
 // #include "interleave.cuh"
 #include "common.h"
-#include "gpu_utils.cuh"
+#include "conjugate-gradient_gpu.cuh"
 #include "conjugate-gradient_cpu.h"
 
 
