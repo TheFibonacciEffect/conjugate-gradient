@@ -56,34 +56,31 @@ int main()
   {
     // z = Ainv q
     conjugate_gradient_gpu(q,z,L,d);
-    // q = z/norm(z)
+    lambda_min = inner_product_gpu(q,z,N)/inner_product_gpu(q,q,N);
+    // q = z/norm(z) 
     float nz = norm(z,N);
-    // I know this is slow, because it is sequential, but the bulk of time is spent on cg anyways.
     for (int j = 0; j < N; j++)
     {
-      z[j] = z[j]/nz;
+      q[j] = z[j]/nz;
     }
-    lambda_min = inner_product_gpu(q,z,N)/inner_product_gpu(q,q,N);
+    printf("lambda min %d %f\n",i, lambda_min);
   }
-  printf("lambda min %f\n",lambda_min);
   
+  random_array(q, L, d, N);
   float lambda_max = 0;
   for (int i = 0; i < itterations; i++)
   {
     // z = A q
     laplace_gpu<<<nblocks, nthreads>>>(z, q, d, L, N, 0);
+    lambda_max = inner_product_gpu(q,z,N)/inner_product_gpu(q,q,N);
     // q = z/norm(z)
     float nz = norm(z,N);
-    // I know this is slow, because it is sequential, but the bulk of time is spent on cg anyways.
     for (int j = 0; j < N; j++)
     {
-      z[j] = z[j]/nz;
+      q[j] = z[j]/nz;
     }
-    lambda_max = inner_product_gpu(q,z,N)/inner_product_gpu(q,q,N);
+    printf("lambda max %d %f\n", i, lambda_max);
   }
-  printf("lambda max %f\n", lambda_max);
-
-  // TODO: Does it make sense that both lambda min and max are 1?
 
   cudaFree(q);
   cudaFree(z);

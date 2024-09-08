@@ -16,10 +16,6 @@ __device__ int get_index_gpu(int *cords, int L, int d, int N);
 extern "C" __host__ __device__ int neighbour_index_gpu(int ind, int direction, int amount, int L, int d,
                                                        int N, int index_mode);
 
-/* index_mode:
-0 = naiive
-1 = bit mixing
-2 = lookup table */
 __global__ void laplace_gpu(float *ddf, float *u, int d,
                             int L, int N, unsigned int index_mode);
 
@@ -30,8 +26,23 @@ extern "C" float inner_product_gpu(float *v, float *w, unsigned int N);
 
 __host__ float norm(float *v, int N);
 
-// TODO still work in progress
-// initial guess is 0
+/**
+ * @brief Solves the laplacian using the Conjugate Gradient method on the GPU.
+ *
+ * This function solves a linear system of equations Ax = b using the Conjugate
+ * Gradient method on the GPU, where A is the discrete laplacian. The system is
+ * defined by the input parameters:
+ * - `b`: Pointer to the right-hand side vector of length N.
+ * - `x`: Pointer to the solution vector of length N.
+ * - `L`: The size of the grid in each dimension.
+ * - `d`: The number of dimensions.
+ *
+ * @param b Pointer to the right-hand side vector.
+ * @param x Pointer to the solution vector.
+ * @param L The size of the grid in each dimension.
+ * @param d The number of dimensions.
+ * @return The residue of the solution.
+ */
 extern "C" float conjugate_gradient_gpu(float *b, float *x, int L, int d);
 
 __global__ void fillArray(float *arr, float value, int size);
