@@ -3,7 +3,6 @@ using CUDA
 using Plots
 using Test
 
-# TODO Make library!!
 # Function to get the pointer of a CUDA array
 function get_ptr(A)
     return Base.unsafe_convert(CuPtr{Cfloat}, A)
@@ -42,6 +41,12 @@ function conjugate_gradient_gpu(b::CuArray{Float32}, x::CuArray{Float32}, L, d):
     @ccall $sym(get_ptr(b)::CuPtr{Cfloat}, get_ptr(x)::CuPtr{Cfloat}, L::Cint, d::Cint)::Cfloat
 end
 
+# Define the wrapper function for `strong_scaling`
+function strong_scaling(nblocks, threads_per_block, N, L, d)::Cfloat
+    sym = Libdl.dlsym(lib, :strong_scaling)
+    @ccall $sym(nblocks::Cint, threads_per_block::Cint, N::Cint, L::Cint, d::Cint)::Cfloat
+end
+
 @testset "indexing on GPU" begin
     @test neighbour_index_gpu(2, 1, 1, 3, 2, 9, 0) == 5
     # edges
@@ -49,5 +54,7 @@ end
     @test neighbour_index_gpu(3, 0, -1, 3, 2, 9, 0) == 9
 
 end;
+
+strong_scaling(1000,1000,1000000, 1000, 2) |> println
 
 Libdl.dlclose(lib) # Close the library explicitly.

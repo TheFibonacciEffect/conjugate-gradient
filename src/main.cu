@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdexcept>
+
 // #include <math.h>
 // #include "interleave.cuh"
 #include "common.h"
@@ -56,13 +57,13 @@ int main()
   {
     // z = Ainv q
     conjugate_gradient_gpu(q,z,L,d);
-    lambda_min = inner_product_gpu(q,z,N)/inner_product_gpu(q,q,N);
     // q = z/norm(z) 
     float nz = norm(z,N);
     for (int j = 0; j < N; j++)
     {
       q[j] = z[j]/nz;
     }
+    lambda_min = inner_product_gpu(q,z,N);
     printf("lambda min %d %f\n",i, lambda_min);
   }
   
@@ -72,7 +73,7 @@ int main()
   {
     // z = A q
     laplace_gpu<<<nblocks, nthreads>>>(z, q, d, L, N, 0);
-    lambda_max = inner_product_gpu(q,z,N)/inner_product_gpu(q,q,N);
+    lambda_max = inner_product_gpu(q,z,N);
     // q = z/norm(z)
     float nz = norm(z,N);
     for (int j = 0; j < N; j++)
