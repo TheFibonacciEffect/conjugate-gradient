@@ -2,6 +2,7 @@ using Libdl
 using CUDA
 using Plots
 using Test
+using ProgressMeter
 
 # Function to get the pointer of a CUDA array
 function get_ptr(A)
@@ -55,6 +56,34 @@ end
 
 end;
 
-strong_scaling(1000,1000,1000000, 1000, 2) |> println
+# weak scaling
+nblocks = 2 .^ 100:100:1000
+nthreads = 2 .^ 100:100:1000
+timings = zeros(length(nblocks), length(nthreads))
+for (i,nb) in enumerate(nblocks)
+    for (j,nt) in enumerate(nthreads)
+        L = ceil(sqrt(nb*nt))
+        N = L*L
+        d = 2
+        timings[i,j] = strong_scaling(nb,nt,N,L,d)
+        println(nt, nb)
+    end
+end
+println(timings)
 
+heatmap(timings',xlabel="nblocks", ylabel="nthreads")
+savefig("scaling.png")
+
+# in the number of dimensions
+dims = 1:1:9
+timings = []
+L = 10
+@showprogress for d in dims
+    N = L^d
+    global timings = [timings; strong_scaling(N,1,N,L,d)]
+end
+plot(dims,timings)
+xlabel!("number of dimensions")
+ylabel!("time (ms)")
+savefig("dims.png")
 Libdl.dlclose(lib) # Close the library explicitly.

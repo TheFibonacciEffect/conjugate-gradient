@@ -24,7 +24,7 @@ extern "C"
     laplace_gpu<<<nblocks, nthreads>>>(b, x, d, L, N, 1);
     cudaDeviceSynchronize();
     auto t1 = timeSinceEpochMillisec();
-    printf("%d\n", t1-t0);
+    // printf("%d\n", t1-t0);
     return t1-t0;
   }
 
