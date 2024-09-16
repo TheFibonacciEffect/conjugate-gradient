@@ -396,31 +396,21 @@ $$
 $$
 
 ## Information on the Used device and theoretical upper limit of performance
-Using the `cuda-device-query` that we compiled in one of the lectures, I can try to find out how many floating point operations, integer operations and read/writes the graphics card is able to do (see `device-query-output.txt`). 
-We are running on a Quadro RTX 4000, with 36 straming multiprocessors with 36 cuda cores per streaming multiprocessor resulting in 2304 CUDA cores in total. With a clock speed of 1545 MHz and 2 floating point operations per clock cycles we get an uper limit of:
-$$
-\begin{align}
-\text{Single Precision FLOPS}  &= \text{CUDA Cores} \times \text{Clock Speed} \times \text{Operations per Cycle} \\
- &= 2304 \times 1.545 \, \text{GHz} \times 2 = 7.122 \, \text{TFLOPS}
-\end{align}
-$$
-which agrees with the [datasheet provided by nvidia](https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/quadro-product-literature/quadro-rtx-4000-datasheet.pdf)
+For estimating the ideal performance, we can look at the [datasheet provided by nvidia](https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/quadro-product-literature/quadro-rtx-4000-datasheet.pdf) which notes a single precision performance of 7.1 TFLOPs and memory bandwidth of 416 GB/s.
 
-For reading and writing we know the 
-- **Memory Clock Rate**: 6501 MHz (effective).
-- **Memory Bus Width**: 256-bit.
-- **Number of Bytes per Transaction**: Since 256-bit = 32 bytes per memory transaction.
-which results in
+with a 32 bit performance this gives a ratio of 
+```
+(32 × (7.1 terabits/second)) / (416 gigabytes/second) ≈ 68
+```
+from the above code analysis we can see that each itteration does
 $$
-\begin{align}
-\text{Memory Bandwidth}  & = \text{Memory Clock Rate} \times \text{Bus Width} / 8 \\
-& = 6501 \, \text{MHz} \times 256 \, \text{bits} / 8 = 208.03 \, \text{GB/s}
-\end{align}
+\frac{(2+14d + 12d^2 + 3d)\text{operations}}{(3d+1)\text{writes}}
 $$
 
-which is half of what the datasheet gives, which claims to have a memory bandwith of 416 GB/s.
+therefore the dimension vs quotient analysis looks like this
+![quotient](quotient.png)
 
-Lets assume a
+which suggests that this approach is memory bound for dimensions lower than 15 and compute bound for larger than 15.
 
 
 # Compiling and Running the test suite
