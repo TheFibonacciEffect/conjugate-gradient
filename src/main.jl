@@ -80,7 +80,7 @@ dims = [1, 2, 3, 4, 6, 8, 12, 24]
 timings = []
 stds = []
 ns = []
-@showprogress for d in dims
+for d in dims
     # N = 2000000000 # 8GB/32bit
     N = 2^24
     println(N^(1/d))
