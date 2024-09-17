@@ -74,7 +74,7 @@ end;
 
 # heatmap(timings',xlabel="nblocks", ylabel="nthreads")
 # savefig("scaling.png")
-function timings()
+function dimension_scaling()
 # in the number of dimensions
 dims = [1, 2, 3, 4, 6, 8, 12, 24]
 timings = []
@@ -106,5 +106,44 @@ savefig("dims.png")
 scatter(dims,ns)
 savefig("ns.png")
 end
-timings()
+
+function scaling(d)
+    nt = 1
+    k = 10
+    Ns = zeros(k)
+    n = 1000
+    i = 1
+    # Threads.@threads for thread in 1:Threads.nthreads()
+    #     p=rand(1:1000000000)
+    #     while true
+    #         if round(p^(1/d))^d == p && n < 1000000000 ÷ nt
+    #             @show Ns[Threads.threadid()] = p
+    #             i+=1
+    #             break
+    #         end
+    #     end
+    # end
+    while  (n < 1000000000 ÷ nt && i <= k)
+        p=rand(1:1000000000)
+        if round(p^(1/d))^d == p
+            @show Ns[i] = p
+            i+=1
+        end
+    end
+    times = zeros(k)
+    for (i,N) = enumerate(Ns)
+        @show Int32(N)
+        @show L = round(N^(1/d))
+        @show Int32(L^d)
+        @show times[i] = strong_scaling(N,nt,N,L,d)
+    end
+    scatter(Ns, times, xlabel="Gridsize", ylabel="times in milliseconds", label="dimension $d")
+    title!("Weak scaling for dimension $d")
+    savefig("weak_scaling_$d.png")
+end
+
+
+# dimension_scaling()
+scaling(5)
+scaling(2)
 Libdl.dlclose(lib) # Close the library explicitly.

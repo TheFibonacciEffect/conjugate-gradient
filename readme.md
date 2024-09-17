@@ -415,7 +415,9 @@ which suggests that this approach is memory bound for dimensions lower than 15 a
 
 ![dim scaling](figs/dims.png)
 
-Code performance scaling over number of dimensions while keeping the total number of sites the same. This is achieved by picking a highly compositible number $n$ so that a grid with the size of $2^n$ can still be fit on the memory in the gpu in this case 24 which has a lot of divisors (1, 2, 3, 4, 6, 8, 12, 24). 
+Code performance scaling over number of dimensions while keeping the total number of sites the same. This is achieved by picking a highly compositible number $n$ so that a grid with the size of $2^n$ can still be fit on the memory in the gpu ($n<30$) in this case 24 which has a lot of divisors (1, 2, 3, 4, 6, 8, 12, 24). 
+
+
 
 # Compiling and Running the test suite
 For building, I use cmake. Therefore you have to run
