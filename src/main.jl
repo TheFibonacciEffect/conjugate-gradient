@@ -3,6 +3,7 @@ using CUDA
 using Plots
 using Test
 using ProgressMeter
+using Statistics
 
 # Function to get the pointer of a CUDA array
 function get_ptr(A)
@@ -71,21 +72,39 @@ end;
 # end
 # println(timings)
 
-heatmap(timings',xlabel="nblocks", ylabel="nthreads")
-savefig("scaling.png")
-
+# heatmap(timings',xlabel="nblocks", ylabel="nthreads")
+# savefig("scaling.png")
+function timings()
 # in the number of dimensions
-dims = 10:2:50
+dims = [1, 2, 3, 4, 6, 8, 12, 24]
 timings = []
+stds = []
+ns = []
 @showprogress for d in dims
-    N = 2000000000 # 8GB/32bit
-    L = floor(N^(1/d))
+    # N = 2000000000 # 8GB/32bit
+    N = 2^24
+    println(N^(1/d))
+    L = round(N^(1/d))
     N = L^d
-    println(N)
-    global timings = [timings; strong_scaling(N,1,N,L,d)]
+    
+    # sqrt(4)^2 = 4
+    # 
+    K = 5
+    t = []
+    for i in 1:K
+        t = [t ;strong_scaling(N,1,N,L,d)]
+    end
+    # global timings = [timings; mean(t) ± std(t)]
+    timings = [timings; mean(t)]
+    stds = [stds; std(t)]
+    ns = [ns; N]
 end
-plot(dims,timings)
+scatter(dims,timings, yerror=stds)
 xlabel!("number of dimensions")
 ylabel!("time (ms)")
 savefig("dims.png")
+scatter(dims,ns)
+savefig("ns.png")
+end
+timings()
 Libdl.dlclose(lib) # Close the library explicitly.
