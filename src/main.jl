@@ -56,30 +56,32 @@ end
 
 end;
 
-# weak scaling
-nblocks = 2 .^ 100:100:1000
-nthreads = 2 .^ 100:100:1000
-timings = zeros(length(nblocks), length(nthreads))
-for (i,nb) in enumerate(nblocks)
-    for (j,nt) in enumerate(nthreads)
-        L = ceil(sqrt(nb*nt))
-        N = L*L
-        d = 2
-        timings[i,j] = strong_scaling(nb,nt,N,L,d)
-        println(nt, nb)
-    end
-end
-println(timings)
+# # weak scaling
+# nblocks = 2 .^ 100:100:1000
+# nthreads = 2 .^ 100:100:1000
+# timings = zeros(length(nblocks), length(nthreads))
+# for (i,nb) in enumerate(nblocks)
+#     for (j,nt) in enumerate(nthreads)
+#         L = ceil(sqrt(nb*nt))
+#         N = L*L
+#         d = 2
+#         timings[i,j] = strong_scaling(nb,nt,N,L,d)
+#         println(nt, nb)
+#     end
+# end
+# println(timings)
 
 heatmap(timings',xlabel="nblocks", ylabel="nthreads")
 savefig("scaling.png")
 
 # in the number of dimensions
-dims = 1:1:9
+dims = 10:2:50
 timings = []
-L = 10
 @showprogress for d in dims
+    N = 2000000000 # 8GB/32bit
+    L = floor(N^(1/d))
     N = L^d
+    println(N)
     global timings = [timings; strong_scaling(N,1,N,L,d)]
 end
 plot(dims,timings)
