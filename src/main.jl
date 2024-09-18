@@ -45,6 +45,7 @@ end
 
 # Define the wrapper function for `strong_scaling`
 function strong_scaling(nblocks, threads_per_block, N, L, d)::Cfloat
+    @assert L^d == N 
     sym = Libdl.dlsym(lib, :strong_scaling)
     @ccall $sym(nblocks::Cint, threads_per_block::Cint, N::Cint, L::Cint, d::Cint)::Cfloat
 end
@@ -108,36 +109,18 @@ savefig("ns.png")
 end
 
 function scaling(d)
-    nt = 1
+    # maxsize = 2000000000/20000
+    maxsize = 1000_000
+    nt = 1 # number of threads
     k = 10
-    Ns = zeros(k)
-    n = 1000
-    i = 1
-    # Threads.@threads for thread in 1:Threads.nthreads()
-    #     p=rand(1:1000000000)
-    #     while true
-    #         if round(p^(1/d))^d == p && n < 1000000000 ÷ nt
-    #             @show Ns[Threads.threadid()] = p
-    #             i+=1
-    #             break
-    #         end
-    #     end
-    # end
-    while  (n < 1000000000 ÷ nt && i <= k)
-        p=rand(1:1000000000)
-        if round(p^(1/d))^d == p
-            @show Ns[i] = p
-            i+=1
-        end
-    end
+    @show Ls = Int32.(round.(range(100,round(maxsize^(1/d)),k)))
+    N = zeros(k)
     times = zeros(k)
-    for (i,N) = enumerate(Ns)
-        @show Int32(N)
-        @show L = round(N^(1/d))
-        @show Int32(L^d)
-        @show times[i] = strong_scaling(N,nt,N,L,d)
+    for (i,L) = enumerate(Ls)
+        @show N[i] = L^d
+        @show times[i] = strong_scaling(N[i],nt,N[i],L,d)
     end
-    scatter(Ns, times, xlabel="Gridsize", ylabel="times in milliseconds", label="dimension $d")
+    scatter(N, times, xlabel="Gridsize", ylabel="times in milliseconds", label="dimension $d")
     title!("Weak scaling for dimension $d")
     savefig("weak_scaling_$d.png")
 end
@@ -146,4 +129,5 @@ end
 # dimension_scaling()
 scaling(5)
 scaling(2)
+scaling(1)
 Libdl.dlclose(lib) # Close the library explicitly.

@@ -435,18 +435,22 @@ static void test_laplace_sin()
 
 int ipow(int N, int d)
 {
+  int k=1;
   for (int i = 0; i < d; i++)
   {
-    N = N*N;
+    k = k*N;
   }
   return N;
 }
 
 static void test_laplace_large()
 {
+  // created this test case, because when calling from julia with large arrays sometimes there is an illigal memory access
+  // this is to make sure that this is not a problem with the C code.
   int L = 1000000;
   int d = 10;
   int N = ipow(L,d);
+  printf("N: %d\n", N);
   int threadsPerBlock = 256;
   int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
   // assert(2*N < 2000000000); // 8GB / 32 bit
@@ -511,25 +515,13 @@ int main(int argc, char const *argv[])
 {
   // CPU Tests
   printf("running cpu tests\n");
-  // Redirect stdout to /dev/null
-  FILE *tmp = stdout;
-  stdout = fopen("/dev/null", "w");
-
   run_tests_cpu();
-  stdout = tmp;
-
   // GPU tests
   printf("running gpu tests\n");
-
-  stdout = fopen("/dev/null", "w");
-
   test_inner_product_gpu();
   test_laplace_sin();
   test_laplace_square();
   test_laplace_large();
-
-  stdout = tmp;
-
   printf("testing inteleaved indexing \n");
   assert(test_cg_gpu(10, 2, 100));
 
