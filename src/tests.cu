@@ -433,6 +433,40 @@ static void test_laplace_sin()
   cudaFree(u);
 }
 
+int ipow(int N, int d)
+{
+  for (int i = 0; i < d; i++)
+  {
+    N = N*N;
+  }
+  return N;
+}
+
+static void test_laplace_large()
+{
+  int L = 1000000;
+  int d = 10;
+  int N = ipow(L,d);
+  int threadsPerBlock = 256;
+  int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
+  // assert(2*N < 2000000000); // 8GB / 32 bit
+  float *ddf = cuda_allocate_field(N);
+  float *u = cuda_allocate_field(N);
+  laplace_gpu<<<blocksPerGrid, threadsPerBlock>>>(ddf, u, d, L, N, 0);
+  CHECK(cudaDeviceSynchronize());
+  div<<<blocksPerGrid, threadsPerBlock>>>(ddf, u, ddf, N);
+  CHECK(cudaDeviceSynchronize());
+  float *ddf_c = (float *)malloc(N * sizeof(float));
+  cudaMemcpy(ddf_c, ddf, N * sizeof(float), cudaMemcpyDeviceToHost);
+  for (int i = 1; i < N - 1; i++) // all except boundary
+  {
+    // printf("%f ",ddf_c[i] -  ddf_c[N/2]); // all the same value
+    assert(abs(ddf_c[i] - ddf_c[N / 2]) < 1e-3);
+  }
+  cudaFree(ddf);
+  cudaFree(u);
+}
+
 bool test_cg_gpu(int L, int d, int N)
 {
   int nblocks = N;
@@ -492,6 +526,7 @@ int main(int argc, char const *argv[])
   test_inner_product_gpu();
   test_laplace_sin();
   test_laplace_square();
+  test_laplace_large();
 
   stdout = tmp;
 
