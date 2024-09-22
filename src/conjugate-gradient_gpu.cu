@@ -125,12 +125,12 @@ static inline __device__ __host__ int index_to_cords(int index, int L, int d)
  * @param index_mode The index mode.
  * @return The index of the neighboring element.
  */
-extern "C" __host__ __device__ int neighbour_index_gpu(int ind, int direction,
-                                                       int amount, int L, int d,
-                                                       int N, int index_mode)
+extern "C" __host__ __device__ unsigned int neighbour_index_gpu(unsigned int ind, int direction,
+                                                       int amount, unsigned int L, unsigned int d,
+                                                       unsigned int N, int index_mode)
 {
   // should be consistant with cpu code
-  int cord = index_to_cords(ind, L, direction);
+  unsigned int cord = index_to_cords(ind, L, direction);
   cord += amount;
   if (/*cord > L || cord < 0 ||*/ cord == -1 || cord == L)
     return N;
@@ -161,7 +161,7 @@ extern "C" __host__ __device__ int neighbour_index_gpu(int ind, int direction,
  * @param N - Total number of elements in the input array.
  * @param index_mode - Indexing mode for accessing neighbouring elements.
  */
-__global__ void laplace_gpu(float *ddf, float *u, int d, int L, int N,
+__global__ void laplace_gpu(float *ddf, float *u, unsigned int d, unsigned int L,unsigned int N,
                             unsigned int index_mode)
 {
   int ind = blockIdx.x * blockDim.x + threadIdx.x;

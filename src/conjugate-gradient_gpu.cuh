@@ -13,11 +13,12 @@ __device__ int *index_to_cords_cu(int *cords, int index, int L, int d);
 
 __device__ int get_index_gpu(int *cords, int L, int d, int N);
 
-extern "C" __host__ __device__ int neighbour_index_gpu(int ind, int direction, int amount, int L, int d,
-                                                       int N, int index_mode);
+extern "C" __host__ __device__ unsigned int neighbour_index_gpu(unsigned int ind, int direction,
+                                                       int amount, unsigned int L, unsigned int d,
+                                                       unsigned int N, int index_mode);
 
-__global__ void laplace_gpu(float *ddf, float *u, int d,
-                            int L, int N, unsigned int index_mode);
+__global__ void laplace_gpu(float *ddf, float *u, unsigned int d,
+                            unsigned int L, unsigned int N, unsigned int index_mode);
 
 __global__ void reduceMulAddComplete(float *v, float *w, float *g_odata,
                                      unsigned int n, const unsigned int nthreads);

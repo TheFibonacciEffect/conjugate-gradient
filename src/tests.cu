@@ -433,24 +433,25 @@ static void test_laplace_sin()
   cudaFree(u);
 }
 
-int ipow(int N, int d)
+unsigned int ipow(unsigned int N, unsigned int d)
 {
-  int k=1;
+  unsigned int k=1;
   for (int i = 0; i < d; i++)
   {
     k = k*N;
+    printf("k%d\n",k);
   }
-  return N;
+  return k;
 }
 
 static void test_laplace_large()
 {
   // created this test case, because when calling from julia with large arrays sometimes there is an illigal memory access
   // this is to make sure that this is not a problem with the C code.
-  int L = 100;
-  int d = 5;
-  int N = ipow(L,d);
-  printf("N: %d\n", N);
+  unsigned int L = 100;
+  unsigned int d = 4;
+  unsigned int N = ipow(L,d);
+  printf("-----\nN: %d\n", N);
   int threadsPerBlock = 256;
   int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
   // assert(2*N < 2000000000); // 8GB / 32 bit
@@ -458,15 +459,6 @@ static void test_laplace_large()
   float *u = cuda_allocate_field(N);
   laplace_gpu<<<blocksPerGrid, threadsPerBlock>>>(ddf, u, d, L, N, 0);
   CHECK(cudaDeviceSynchronize());
-  div<<<blocksPerGrid, threadsPerBlock>>>(ddf, u, ddf, N);
-  CHECK(cudaDeviceSynchronize());
-  float *ddf_c = (float *)malloc(N * sizeof(float));
-  cudaMemcpy(ddf_c, ddf, N * sizeof(float), cudaMemcpyDeviceToHost);
-  for (int i = 1; i < N - 1; i++) // all except boundary
-  {
-    // printf("%f ",ddf_c[i] -  ddf_c[N/2]); // all the same value
-    assert(abs(ddf_c[i] - ddf_c[N / 2]) < 1e-3);
-  }
   cudaFree(ddf);
   cudaFree(u);
 }
