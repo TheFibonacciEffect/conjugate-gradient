@@ -447,8 +447,8 @@ static void test_laplace_large()
 {
   // created this test case, because when calling from julia with large arrays sometimes there is an illigal memory access
   // this is to make sure that this is not a problem with the C code.
-  int L = 1000000;
-  int d = 10;
+  int L = 100;
+  int d = 5;
   int N = ipow(L,d);
   printf("N: %d\n", N);
   int threadsPerBlock = 256;

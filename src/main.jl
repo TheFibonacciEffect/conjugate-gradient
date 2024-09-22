@@ -110,14 +110,16 @@ end
 
 function scaling(d)
     # maxsize = 2000000000/20000
-    maxsize = 1000_000
+    maxsize = 200000000
     nt = 1 # number of threads
     k = 10
-    @show Ls = Int32.(round.(range(100,round(maxsize^(1/d)),k)))
+    @show Ls = Int32.(round.(range(1,round(maxsize^(1/d)),k)))
     N = zeros(k)
     times = zeros(k)
     for (i,L) = enumerate(Ls)
         @show N[i] = L^d
+        @show L
+        @show d
         @show times[i] = strong_scaling(N[i],nt,N[i],L,d)
     end
     scatter(N, times, xlabel="Gridsize", ylabel="times in milliseconds", label="dimension $d")
