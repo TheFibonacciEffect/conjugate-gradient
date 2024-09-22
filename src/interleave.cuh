@@ -149,5 +149,27 @@ int tests_interleaved_index()
   printf("%#x = %d %d (outside? %d)\n", ioverleft.i, coverleft[0], coverleft[1],
          ioverleft.is_outside(16 * 16));
 
+  // for effective laplace
+  Detail::index_t ii = 3*3;
+  Index<3> idx = {ii};
+  auto overright = idx.neighbour<1>(0);
+  printf("outsdide? %d\n" , ioverleft.is_outside(3*3*3));
   return 0;
 }
+
+// void laplace(float* ddf, float * u, int N, int L, int d)
+// {
+//   // Detail::index_t ind = blockIdx.x * blockDim.x + threadIdx.x;
+//   Index<3> ind = {blockIdx.x * blockDim.x + threadIdx.x};
+//   if (ind < N)
+//   {
+//     float laplace_value = 0;
+//     for (int i = 0; i < d; i++)
+//     {
+//       // laplace_value += -u[neighbour_index_gpu(ind, i, 1, L, d, N, index_mode)] + 2 * u[neighbour_index_gpu(ind, i, 0, L, d, N, index_mode)] - u[neighbour_index_gpu(ind, i, -1, L, d, N, index_mode)];
+//       laplace_value += - u[ind.neighbour<1>(i)];
+//     }
+//     // the discrete version is defined without dx
+//     ddf[ind] = laplace_value;
+//   } 
+// }
