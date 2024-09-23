@@ -286,7 +286,7 @@ So in total we have
 7. `cdq`                → Sign extend (1 integer operation in `.L2`)
 8. `idiv    esi`         → Integer division (1 integer operation in `.L2`)
 
-which gives 4 operations in .L3, 2 in .L2 which is 6 operations per itteration of the loop and 2 operations outside. Giving us $8d + 2$ operations in total.
+which gives 4 operations in .L3, 2 in .L2 which is 6 operations per itteration of the loop and 2 operations outside. Giving us $6d + 2$ operations in total.
 
 
 The next function we need to look at is the neighbour index function:
@@ -400,7 +400,7 @@ For estimating the ideal performance, we can look at the [datasheet provided by 
 
 with a 32 bit performance this gives a ratio of 
 ```
-(32 × (7.1 terabits/second)) / (416 gigabytes/second) ≈ 68
+(7.1 × (10^12)) / 416000000000 ≈ 17
 ```
 from the above code analysis we can see that each itteration does
 $$
