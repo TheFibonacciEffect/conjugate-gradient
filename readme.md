@@ -86,7 +86,7 @@ Here some implementation details are described.
 
 ## Reduction
 For the implementation of the reduction that needs to be done for the inner product, I refered to the document "Optimizing Parallel Reduction in CUDA" by Mark Harris. It uses sequential adressing, see figure below:
-![[Pasted image 20240904205146.png]]
+![reduction](figs/reduction.png)
 
 This is the code that is used for this:
 ```cpp
