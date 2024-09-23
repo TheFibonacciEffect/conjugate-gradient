@@ -83,17 +83,17 @@ stds = []
 ns = []
 for d in dims
     # N = 2000000000 # 8GB/32bit
+    nt = 1 #wip
     N = 2^24
-    println(N^(1/d))
     L = round(N^(1/d))
-    N = L^d
+    N = L^d*nt
     
     # sqrt(4)^2 = 4
     # 
     K = 5
     t = []
     for i in 1:K
-        t = [t ;strong_scaling(N,1,N,L,d)]
+        t = [t ;strong_scaling(N,nt,N,L,d)]
     end
     # global timings = [timings; mean(t) ± std(t)]
     timings = [timings; mean(t)]
@@ -108,10 +108,11 @@ scatter(dims,ns)
 savefig("ns.png")
 end
 
-function scaling(d)
+function scaling(d,nt)
     # maxsize = 2000000000/20000
-    maxsize = 200000000
-    nt = 1 # number of threads
+    # maxsize = 2000000*512
+    # nt = 512 # number of threads
+    maxsize = 2000000
     k = 10
     @show Ls = Int32.(round.(range(1,round(maxsize^(1/d)),k)))
     N = zeros(k)
@@ -122,14 +123,14 @@ function scaling(d)
         @show d
         @show times[i] = strong_scaling(N[i],nt,N[i],L,d)
     end
-    scatter(N, times, xlabel="Gridsize", ylabel="times in milliseconds", label="dimension $d")
+    scatter!(N, times, xlabel="Gridsize", ylabel="times in milliseconds", label="dimension $d, threads $nt")
     title!("Weak scaling for dimension $d")
     savefig("weak_scaling_$d.png")
 end
 
-
 # dimension_scaling()
-scaling(5)
-scaling(2)
-scaling(1)
+plot()
+scaling(1,512)
+scaling(1,1)
+scaling(1,32)
 Libdl.dlclose(lib) # Close the library explicitly.

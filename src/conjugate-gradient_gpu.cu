@@ -188,7 +188,6 @@ __global__ void laplace_gpu(float *ddf, float *u, unsigned int d, unsigned int L
  * @param n         The size of the input arrays `v` and `w`.
  * @param nthreads  The number of threads per block.
  */
-
 __global__ void reduceMulAddComplete(float *v, float *w, float *g_odata,
                                      unsigned int n, const unsigned int nthreads)
 {
