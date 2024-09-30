@@ -128,9 +128,24 @@ function scaling(d,nt)
     savefig("weak_scaling_$d.png")
 end
 
+
+function scaling1d(nt, maxblocks)
+    k = 10
+    blocks = Int32.(round.(range(1,round(maxblocks),k)))
+    times = zeros(k)
+    for (i,nblocks) in enumerate(blocks)
+        N = nblocks*nt
+        L = N
+        times[i] = strong_scaling(nblocks, nt, N,N ,1)
+    end
+    plot!(blocks, times, xlabel="blocks", ylabel="time in ms", label="timings for $nt threads", markersize = 20)
+end
+
 # dimension_scaling()
+maxsize = 2000000000 ÷ 3
 plot()
-scaling(1,512)
-scaling(1,1)
-scaling(1,32)
+for nt in [1,32,128,512]
+    scaling1d(nt,5000)
+end
+savefig("scaling1d.png")
 Libdl.dlclose(lib) # Close the library explicitly.
