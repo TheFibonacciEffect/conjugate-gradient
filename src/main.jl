@@ -130,22 +130,28 @@ end
 
 
 function scaling1d(nt, maxblocks)
-    k = 10
+    k = 100
     blocks = Int32.(round.(range(1,round(maxblocks),k)))
     times = zeros(k)
+    stds = zeros(k)
     for (i,nblocks) in enumerate(blocks)
         N = nblocks*nt
         L = N
-        times[i] = strong_scaling(nblocks, nt, N,N ,1)
+        t = []
+        for i in 1:10
+            t = [t ;strong_scaling(nblocks, nt, N,N ,1)]
+        end
+        @show times[i] = mean(t)
+        stds[i] = std(t)
     end
-    plot!(blocks, times, xlabel="blocks", ylabel="time in ms", label="timings for $nt threads", markersize = 20)
+    plot!(blocks, times, xlabel="blocks", ylabel="time in ms", label="timings for $nt threads", markersize = 20, ribbon=stds)
 end
 
 # dimension_scaling()
 maxsize = 2000000000 ÷ 3
 plot()
 for nt in [1,32,128,512]
-    scaling1d(nt,5000)
+    scaling1d(nt,1000)
 end
 savefig("scaling1d.png")
 Libdl.dlclose(lib) # Close the library explicitly.
