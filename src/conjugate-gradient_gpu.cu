@@ -345,7 +345,8 @@ extern "C" float conjugate_gradient_gpu(float *b, float *x, int L, int d)
   float alpha = NAN;
   float residue = norm(r, N);
   float beta = 0;
-  while (residue > reltol)
+  int maxitter = 200;
+  while (residue > reltol && i < maxitter)
   {
 
     laplace_gpu<<<nblocks, nthreads>>>(Ap, p, d, L, N, 0);
@@ -365,6 +366,7 @@ extern "C" float conjugate_gradient_gpu(float *b, float *x, int L, int d)
     residue = sqrt(rr);
     rr = rr_new;
     i++;
+    printf("%d,%f\n",i, residue);
   }
   cudaFree(r);
   cudaFree(Ap);

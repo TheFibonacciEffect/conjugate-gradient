@@ -37,52 +37,22 @@ void cg_ones(int L, int d, int N)
 
 int main()
 {
-  int N = 100;
-  int L = 10;
-  int d = 2;
 
   // TODO compare laplace to cpu version
 
   // find the smallest and largest eigenvalue
-  int nblocks = N;
-  int nthreads = 1;
+  // int nblocks = 1000000;
+  int nblocks = 100000;
+  int nthreads = 312;
+  int N = nblocks*nthreads;
+  int L = N;
+  int d = 1;
   // allocate an array
   float *z = cuda_allocate_field(N);
   float *q = cuda_allocate_field(N);
   // fill it with random data
   random_array(q, L, d, N);
-  float lambda_min = 0;
-  int itterations = 100;
-  for (int i = 0; i < itterations; i++)
-  {
-    // z = Ainv q
-    conjugate_gradient_gpu(q,z,L,d);
-    // q = z/norm(z) 
-    float nz = norm(z,N);
-    for (int j = 0; j < N; j++)
-    {
-      q[j] = z[j]/nz;
-    }
-    lambda_min = inner_product_gpu(q,z,N);
-    printf("lambda min %d %f\n",i, lambda_min);
-  }
-  
-  random_array(q, L, d, N);
-  float lambda_max = 0;
-  for (int i = 0; i < itterations; i++)
-  {
-    // z = A q
-    laplace_gpu<<<nblocks, nthreads>>>(z, q, d, L, N, 0);
-    lambda_max = inner_product_gpu(q,z,N);
-    // q = z/norm(z)
-    float nz = norm(z,N);
-    for (int j = 0; j < N; j++)
-    {
-      q[j] = z[j]/nz;
-    }
-    printf("lambda max %d %f\n", i, lambda_max);
-  }
-
+  conjugate_gradient_gpu(q,z,L,d);
   cudaFree(q);
   cudaFree(z);
 }
