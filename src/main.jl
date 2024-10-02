@@ -50,6 +50,13 @@ function strong_scaling(nblocks, threads_per_block, N, L, d)::Cfloat
     @ccall $sym(nblocks::Cint, threads_per_block::Cint, N::Cint, L::Cint, d::Cint)::Cfloat
 end
 
+# Define the wrapper function for `time_cpu_laplace`
+function time_cpu_laplace(N, L, d)::Cfloat
+    @assert L^d == N 
+    sym = Libdl.dlsym(lib, :time_cpu_laplace)
+    @ccall $sym(N::Cint, L::Cint, d::Cint)::Cfloat
+end
+
 @testset "indexing on GPU" begin
     @test neighbour_index_gpu(2, 1, 1, 3, 2, 9, 0) == 5
     # edges
@@ -102,7 +109,7 @@ for d in dims
 end
 scatter(dims,timings, yerror=stds)
 xlabel!("number of dimensions")
-ylabel!("time (ms)")
+ylabel!("time (us)")
 savefig("dims.png")
 scatter(dims,ns)
 savefig("ns.png")
@@ -123,7 +130,7 @@ function scaling(d,nt)
         @show d
         @show times[i] = strong_scaling(N[i],nt,N[i],L,d)
     end
-    scatter!(N, times, xlabel="Gridsize", ylabel="times in milliseconds", label="dimension $d, threads $nt")
+    scatter!(N, times, xlabel="Gridsize", ylabel="times in microseconds", label="dimension $d, threads $nt")
     title!("Weak scaling for dimension $d")
     savefig("weak_scaling_$d.png")
 end
@@ -139,18 +146,18 @@ function scaling1d(nt, maxblocks)
         L = N
         t = []
         for i in 1:10
-            t = [t ;strong_scaling(nblocks, nt, N,N ,1)]
+            t = [t ;strong_scaling(nblocks, nt, N,L ,1)/time_cpu_laplace(N, L, 1)]
         end
         @show times[i] = mean(t)
         stds[i] = std(t)
     end
-    plot!(blocks, times, xlabel="blocks", ylabel="time in ms", label="timings for $nt threads", markersize = 20, ribbon=stds)
+    plot!(blocks, times, xlabel="blocks", ylabel="time gpu/cpu", label="timings for $nt threads", markersize = 20, ribbon=stds, yscale=:log10)
 end
 
 # dimension_scaling()
 maxsize = 2000000000 ÷ 3
 plot()
-for nt in [1,32,128,512]
+for nt in [128,512]
     scaling1d(nt,1000)
 end
 savefig("scaling1d.png")

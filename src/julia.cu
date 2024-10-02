@@ -1,10 +1,11 @@
 #include "conjugate-gradient_gpu.cuh"
+#include "conjugate-gradient_cpu.h"
 #include <chrono>
 #include<unistd.h>
 
 uint64_t timeSinceEpochMillisec() {
   using namespace std::chrono;
-  return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+  return duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
 }
 
 // julia wrapper functions
@@ -25,6 +26,18 @@ extern "C"
     cudaDeviceSynchronize();
     auto t1 = timeSinceEpochMillisec();
     // printf("%d\n", t1-t0);
+    return t1-t0;
+  }
+
+  float time_cpu_laplace(int N, int L, int d)
+  {
+    double *x = allocate_field(N);
+    double *b = allocate_field(N);
+    // fill it with random data
+    random_array(x, L, d, N);
+    auto t0 = timeSinceEpochMillisec();
+    minus_laplace(b, x, d, L, N);
+    auto t1 = timeSinceEpochMillisec();
     return t1-t0;
   }
 
