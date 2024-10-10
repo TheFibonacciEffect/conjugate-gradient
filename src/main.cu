@@ -37,11 +37,6 @@ void cg_ones(int L, int d, int N)
 
 int main()
 {
-
-  // TODO compare laplace to cpu version
-
-  // find the smallest and largest eigenvalue
-  // int nblocks = 1000000;
   int nblocks = 100000;
   int nthreads = 312;
   int N = nblocks*nthreads;

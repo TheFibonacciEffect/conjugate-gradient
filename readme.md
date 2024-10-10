@@ -384,11 +384,12 @@ __global__ void laplace_gpu(float *ddf, float *u, int d, int L, int N,
 ```
 
 in order to be able to compile it with gcc I slightly change the function signature to `void laplace_gpu(float *ddf, float *u, int d, int L, int N, unsigned int index_mode, int ind)`. This gives a rather long assembly code which can be found in `figs/C++-x86-64 gcc 14.2-1.asm`.
+This has 3d reads, d writes and 3d floating point operations as well as 2 + 2d integer operations.
 
 Based on the line by line analysis of the code, this gives in total
 $$
 \begin{align}
-	2+ d(2+4+12d+8)  & = 2+ 14d+ 12d^2  \qquad & \text{integer operations} \\
+	2+ d(2+6d + 2+12d+8)  & = 2+ 12d + 18d^2  \qquad & \text{integer operations} \\
  3d  &  & \text{floating point operations} \\
 3d &  & \text{reads} \\
 1 &  & \text{write}
@@ -402,11 +403,7 @@ with a 32 bit performance this gives a ratio of
 ```
 (7.1 × (10^12)) / 416000000000 ≈ 17
 ```
-from the above code analysis we can see that each itteration does
-$$
-\frac{(2+14d + 12d^2 + 3d)\text{operations}}{(3d+1)\text{writes}}
-$$
-
+<!-- 
 therefore the dimension vs quotient analysis looks like this
 ![quotient](figs/quotient.png)
 
@@ -415,9 +412,15 @@ which suggests that this approach is memory bound for dimensions lower than 15 a
 
 ![dim scaling](figs/dims.png)
 
-Code performance scaling over number of dimensions while keeping the total number of sites the same. This is achieved by picking a highly compositible number $n$ so that a grid with the size of $2^n$ can still be fit on the memory in the gpu ($n<30$) in this case 24 which has a lot of divisors (1, 2, 3, 4, 6, 8, 12, 24). 
+Code performance scaling over number of dimensions while keeping the total number of sites the same. This is achieved by picking a highly compositible number $n$ so that a grid with the size of $2^n$ can still be fit on the memory in the gpu ($n<30$) in this case 24 which has a lot of divisors (1, 2, 3, 4, 6, 8, 12, 24).  -->
 
+# Scaleup vs CPU
+The scaleup vs the CPU version of the laplace operator can be found below:
+![scaleup1](<figs/scaling1d rel.png>)
+![scaleup2](<figs/scaling1d rel2.png>)
+we can be seen, with a single thread, the gpu version is slower than the gpu version, because the overhead from initializing the kernels and using the `atomicadd` from the inner product is significant. 
 
+However for multiple threads the relative performance is much better, the laplace operator takes about 1/10th of the time of the cpu version in the 500+ blocks range. For a small number of blocks, the overhead and thread divergence from bounds checking are siginifcant however.
 
 # Compiling and Running the test suite
 For building, I use cmake. Therefore you have to run
@@ -428,7 +431,7 @@ cmake ../src
 make
 ```
 then you  can either run `./tests` or `./main`.
-some additional, interactive functionality is provided by julia. For this you have to run `julia --project=. src/main.jl`, the julia version used in this repository is `1.10.4`, for installing it on the hu cluster you have to download it using `curl -fsSL https://install.julialang.org | sh` which will also add it to the bashrc.
+some additional, interactive functionality is provided by julia. For this you have to run `julia --project=. src/main.jl`, the julia version used in this repository is `1.10.4`, for installing it on the hu cluster you have to download it using `curl -fsSL https://install.julialang.org | sh` which will also add it to the bashrc. This is done by compiling a shared object file.
 
 # Documentation and Formatting
 Every function contains a docstring that was generated using GitHub copilot and tweaked to match the function. The code was formatted using `clang-format`. 
